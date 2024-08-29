@@ -1,6 +1,6 @@
 ---
 title: "Class Reference"
-author: "Derek Willis"
+author: "Sonia Vargas"
 output:
   html_document:
     theme: cerulean
@@ -24,12 +24,53 @@ Consider this a personal guide to the commands and functions you will learn. In 
 The command to set a working directory is setwd(). For example, this sets the working directory to a directory called data_journalism_2024_fall inside a directory called jour472 located inside your home directory (the ~ is equivalent of /Users/[youruser] on a Mac).
 
 ```{r}
-setwd("~/jour472/data_journalism_2024_fall")
+# setwd("~/jour472/data_journalism_2024_fall")
+getwd()
+setwd("~/Documents/UMD/2024-2025/JOUR772_data_journalism")
 ```
 
 ### How to install and load the tidyverse
 
 ```{r}
-install.packages("tidyverse")
+# install.packages("tidyverse")
 library(tidyverse)
 ```
+```{r}
+################# Three Functions Notes Ch 10 ##########################
+?read_rds
+# a tidyverse function that helps to read in data - im unsure ive ever used this format before, what does it stand for R dataset? it seems like its saving binary files from an origin (website) that can be used as data in the terminal
+maryland_winred_contributions <- read_rds("https://thescoop.org/files/maryland_winred.rds")
+
+?summarise
+# summarise() creates a new data frame. It returns one row for each combination of grouping variables; if there are no grouping variables, the output will have a single row summarising all observations in the input. It will contain one column for each grouping variable and one column for each of the summary statistics that you have specified.
+# this looks like its typically used when there is a grouped variable
+
+?group_by
+# Most data operations are done on groups defined by variables. group_by() takes an existing tbl and converts it into a grouped tbl where operations are performed "by group". ungroup() removes grouping.
+# I personally really enjoy this function, it makes conceptualizing, rearranging, and analyzing data fun
+maryland_winred_contributions %>% # i prefer piping but i never knew about the |> ability!
+  group_by(memo_text) %>%  # this shows me the data by campaign contributions
+  summarise(               # this is another var I want shown in this table
+    count_contribs = n()   # this is the other variable, which counts n contributions to the group_by campaign titles
+  ) %>%  # also with piping- a shortcut is cmd + shift + m
+
+# wow! Hogan with top 4 campaign contributions
+
+
+?arrange
+# arrange() orders the rows of a data frame by the values of selected columns. 
+# here im also going to take use of the basic summary statistic functions, mean(), min(), max(), sum()
+maryland_winred_contributions %>%
+  group_by(memo_text) %>%  # grouped by campaign contributions
+  summarise(               # adding vars to table
+    count_contribs = n(),   # counts n contributions to the group_by campaign titles
+    total_amount = sum(amount), # adds up values of all contributions grouped by campaign
+    mean_amount = mean(amount),
+    min_amount = min(amount),
+    max_amount = max(amount),
+  ) %>% 
+  arrange(desc(total_amount)) # I like changing what the arranging order variable is to see whats changing
+# while Hogan is #4 for numbers of donations, he is #2 right behind trump for total contributions.
+
+```
+
