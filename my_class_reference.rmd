@@ -52,7 +52,7 @@ maryland_winred_contributions %>% # i prefer piping but i never knew about the |
   group_by(memo_text) %>%  # this shows me the data by campaign contributions
   summarise(               # this is another var I want shown in this table
     count_contribs = n()   # this is the other variable, which counts n contributions to the group_by campaign titles
-  ) %>%  # also with piping- a shortcut is cmd + shift + m
+  )  # also with piping- a shortcut is cmd + shift + m
 
 # wow! Hogan with top 4 campaign contributions
 
