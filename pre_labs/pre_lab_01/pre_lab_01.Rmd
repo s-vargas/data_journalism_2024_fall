@@ -71,7 +71,10 @@ install.packages('rmarkdown')
 
 ### Task 1: Load libraries
 
-**Task** Run the following code in the gray-colored codeblock below -- not in the console -- to load the tidyverse library. To run the code, click the little green play button (left facing arrow) at the top right of the codeblock. In Rmarkdown data notebooks, we write code inside of codeblocks, and explanatory text in the white area outside of it.
+**Task** Run the following code in the gray-colored codeblock below -- not in the console -- 
+to load the tidyverse library. To run the code, click the little green play button 
+(left facing arrow) at the top right of the codeblock. In Rmarkdown data notebooks, 
+we write code inside of codeblocks, and explanatory text in the white area outside of it.
 
 ```{r}
 # This is a comment inside of a codeblock. Comments doesn't run when we run the codeblock.
@@ -87,7 +90,11 @@ library(tidyverse)
 maryland_winred_contributions <- read_rds("pre_lab_01.rds")
 ```
 
-Once it loads, look at the environment window at right in RStudio for maryland_winred_contributions. It's next to a small blue circle with a white arrow in it. To the right of that, look at how many "obs" the dataset has ("obs" is short for observation, which is another way of saying rows or records). Look at how many variables it has (another way of saying columns or fields). Write the number of observations and variables below.
+Once it loads, look at the environment window at right in RStudio for maryland_winred_contributions. 
+It's next to a small blue circle with a white arrow in it. To the right of that, look 
+at how many "obs" the dataset has ("obs" is short for observation, which is another way 
+of saying rows or records). Look at how many variables it has (another way of saying 
+columns or fields). Write the number of observations and variables below.
 
 **Answer**
 131395 obs
@@ -101,11 +108,14 @@ glimpse(maryland_winred_contributions)
 ```
 
 In the space below, write the data type for the "last_name" column and the "amount" columns (it's in light gray, offset by \< \>). Also offer your best guess as to what the "last_name" column and the "amount" column represent. **Answer**
-Ladt_Name is a character variable that represents the last name of the donor recorded. Amount represents the amount donated by the individual to the respective campaign.
+Ladt_Name is a character variable that represents the last name of the donor recorded. 
+Amount represents the amount donated by the individual to the respective campaign.
 
 ### Task 4: Examine data "head"
 
-**Task** Run the following codeblock to use head() to examine the first six rows of data. Explore the data by clicking the black arrow on the right side of the output table, allowing you to examine additional columns.
+**Task** Run the following codeblock to use head() to examine the first six rows of data. 
+Explore the data by clicking the black arrow on the right side of the output table, 
+allowing you to examine additional columns.
 
 ```{r}
 head(maryland_winred_contributions)
@@ -117,7 +127,11 @@ Peggy Mukai
 
 ### Task 5: Explore data with interactive dataframe
 
-**Task** look at the environment window at right in RStudio for maryland_winred_contributions It's next to a small blue circle with a white arrow in it. Click on the maryland_winred_contributions -- not the blue circle. It will open the dataframe as an interactive table. Scroll down to see additional rows. Scroll left to see additional columns. Click on a column name to sort by that column.
+**Task** look at the environment window at right in RStudio for maryland_winred_contributions 
+It's next to a small blue circle with a white arrow in it. Click on the maryland_winred_contributions 
+-- not the blue circle. It will open the dataframe as an interactive table. Scroll down to 
+see additional rows. Scroll left to see additional columns. Click on a column name to sort 
+by that column.
 
 ### Task 6: Group and count
 
@@ -131,10 +145,16 @@ maryland_winred_contributions |>
   )
 ```
 
-Describe what you think this code is doing below. What does the answer represent, compared to the results from `head()`?
+Describe what you think this code is doing below. What does the answer represent, 
+compared to the results from `head()`?
 
 **Answer**
-Head() only shows the first few rows of the loaded dataset with no manipulation or editing. the table used above with group_by is selecting exactly what variables to be shown to me. It is creating a separate table from the existing data that does not already exist in the dataset. With Group_by it is grouping total contributions by the date of contributions. This is showing all 92 unique dates in the dataset, and summing the total contributions on each date. 
+Head() only shows the first few rows of the loaded dataset with no manipulation 
+or editing. the table used above with group_by is selecting exactly what variables 
+to be shown to me. It is creating a separate table from the existing data that does 
+not already exist in the dataset. With Group_by it is grouping total contributions 
+by the date of contributions. This is showing all 92 unique dates in the dataset, 
+and summing the total contributions on each date. 
 
 ### Task 7: Adding arrange()
 
@@ -152,7 +172,10 @@ maryland_winred_contributions |>
 Compared to the previous codeblock, what has changed and how did that affect the result?
 
 **Answer**
-This code specifically arranged the same table in descending order. This allows us to see what dates had the most number of contributions. We can see that May and June are very popular donation times, likely due to primaries and campaigns ramping up before November. 
+This code specifically arranged the same table in descending order. This allows us
+to see what dates had the most number of contributions. We can see that May and 
+June are very popular donation times, likely due to primaries and campaigns ramping 
+up before November. 
 
 ### Task 8: Multiple grouping
 
@@ -170,7 +193,10 @@ maryland_winred_contributions |>
 Compared to the previous codeblock, what has changed and how did that affect the result?
 
 **Answer**
-Now we are grouping by the specific amount donated to a specific campaign, all organized in descending count order. This is interesting because the most common contribution amount is 21.07 to the Trump National Committee, with 5915 different contributions. Why are people donating exactly 21.07? 
+Now we are grouping by the specific amount donated to a specific campaign, all 
+organized in descending count order. This is interesting because the most common 
+contribution amount is 21.07 to the Trump National Committee, with 5915 different
+contributions. Why are people donating exactly 21.07? 
 
 ### Task 9
 
@@ -186,14 +212,25 @@ maryland_winred_contributions |>
   arrange(desc(total_amount))
 ```
 
-Compared to the previous codeblock, what has changed and how did that affect the result? 
+Compared to the previous codeblock, what has changed and how did that affect the 
+result? 
 
 **Answer**
-This table is showing total campaign contributions in dollars and counts. It is organized in descending amount numbers so we can observe exactly what campaigns have received the most money rather than donors. We see that the Trump National Committee is the highest earning campaign. I'm unsure if this is a mistake or if there are two separate memos, but the Trump National Committee JFC has two memos, one with INC and one that is not INC. Combining these two together would increase the total to an even greater amount.
+This table is showing total campaign contributions in dollars and counts. It is 
+organized in descending amount numbers so we can observe exactly what campaigns 
+have received the most money rather than donors. We see that the Trump National 
+Committee is the highest earning campaign. I'm unsure if this is a mistake or if 
+there are two separate memos, but the Trump National Committee JFC has two memos, 
+one with INC and one that is not INC. Combining these two together would increase 
+the total to an even greater amount.
 
 ### Task 10: More descriptive statistics
 
-**Task** Run the following codeblock to group the maryland_winred_contributions dataframe by the recipient for each contribution. Then do the following summarizations for each group:count the number of contributions, add up the value of all contributions, and calculate the mean and median contribution amounts. Then sort so the recipient with the most contributions is listed first.
+**Task** Run the following codeblock to group the maryland_winred_contributions 
+dataframe by the recipient for each contribution. Then do the following summarizations 
+for each group:count the number of contributions, add up the value of all contributions, 
+and calculate the mean and median contribution amounts. Then sort so the recipient
+with the most contributions is listed first.
 
 ```{r}
 maryland_winred_contributions |>
@@ -207,14 +244,24 @@ maryland_winred_contributions |>
   arrange(desc(count_contribs))
 ```
 
-Compared to the previous codeblock, what has changed and how did that affect the result? Glancing at the names, which of the top results from Maryland?
+Compared to the previous codeblock, what has changed and how did that affect the 
+result? Glancing at the names, which of the top results from Maryland?
 
 **Answer**
-Now we are seeing the mean and median donation amounts, and the table is ordered by number of campaign contributions in descending order. We see that the Trump campaign has the most donors, and a lower average donation. This results in a large total amount. Conversely, we also see how Larry Hogan's campaign has a higher mean amount, but much less donors.
+Now we are seeing the mean and median donation amounts, and the table is ordered
+by number of campaign contributions in descending order. We see that the Trump 
+campaign has the most donors, and a lower average donation. This results in a 
+large total amount. Conversely, we also see how Larry Hogan's campaign has a higher
+mean amount, but much less donors.
 
 ### Task 11
 
-**Task** Run the following codeblock to group the maryland_winred_contributions dataframe by the city for each contribution. Then do the following summarizations for each group:count the number of contributions, add up the value of all contributions, calculate the mean and median contributions amounts and calculate the smallest and largest contributions Then sort so the city with the largest total contribution amount is listed first.
+**Task** Run the following codeblock to group the maryland_winred_contributions 
+dataframe by the city for each contribution. Then do the following summarizations 
+for each group:count the number of contributions, add up the value of all 
+contributions, calculate the mean and median contributions amounts and calculate 
+the smallest and largest contributions Then sort so the city with the largest 
+total contribution amount is listed first.
 
 ```{r}
 maryland_winred_contributions |>
@@ -231,4 +278,9 @@ maryland_winred_contributions |>
 ```
 
 Compared to the previous codeblock, what has changed and how did that affect the result? How is the data sorted? **Answer**
-Instead of grouping by campaign or contributions, we are now grouping by city where the donation is coming from. We also see the counts for contributions, total contributions, mean, median, min, and max summary statistics for each city. The city with the greatest amount donated is Annapolis, but the city with the most contributions is Hagerstown.The mean amount for Hagerstown is $\$7$, while that for Annapolis is $\$57$.  
+Instead of grouping by campaign or contributions, we are now grouping by city 
+where the donation is coming from. We also see the counts for contributions, 
+total contributions, mean, median, min, and max summary statistics for each city.
+The city with the greatest amount donated is Annapolis, but the city with the most
+contributions is Hagerstown.The mean amount for Hagerstown is $\$7$, while that 
+for Annapolis is $\$57$.  
