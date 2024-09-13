@@ -1,0 +1,146 @@
+---
+title: "lab_02"
+author: "derek willis"
+date: "2024-08-16"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load libraries and establish settings
+
+```{r}
+# Turn off scientific notation
+options(scipen=999)
+
+# Load the tidyverse. If you have not installed the tidyverse already, remove the # from the next line and run it first.  
+# install.packages('tidyverse')
+library(tidyverse)
+library(lubridate)
+```
+
+## Load Data
+
+For this lab we'll be working with a slice of Maryland voter registration data: records of people who have registration dates this year through Aug. 7. Let's load it.
+
+```{r}
+md_voters_2024 <- read_rds("data/lab_02.rds")
+```
+
+## Examine Data
+
+Take a look at the data, getting familiar with what it contains. Most of the columns should be self-explanatory, but there are two date columns: STATE_REGISTRATION_DATE and COUNTY_REGISTRATION_DATE. The former represents the date the person registered as a Maryland voter; the latter is when they registered in their current county. They may be the same, but if a voter moves from one county to another they will differ. This is important because if the two dates are the same, that's a pretty good indication that this is a *new* voter, someone who has no history of registering in Maryland. You'll need to keep that definition in mind.
+
+## Answer questions
+
+**Q1** How many voters appear to be *new* registrants since July 21, when President Joe Biden announced he would leave the race, based on the information above? Create a dataframe to hold the only those voters. Which counties have seen the most? Take a look at county population figures here and compare the two in your answer: https://worldpopulationreview.com/us-counties/maryland.
+
+**A1**
+109990 new voters in 2024 until Aug 7
+Going down the list of population and most registrants, the results are very similar. The first 10 are almost the same across the two, with Carroll County having more population growth than relative new voters. 
+```{r}
+
+md_voters_2024$new_reg <- ifelse(md_voters_2024$STATE_REGISTRATION_DATE == md_voters_2024$COUNTY_REGISTRATION_DATE,1,0) # creating a new dummy var that indicates new voters based on given definition
+
+table(md_voters_2024$new_reg) # seeing what the makeup of new voters in the data looks like
+
+mean(md_voters_2024$new_reg) # it looks like 99% of registrations from this year are new registrations
+
+new_Only <- md_voters_2024 |>
+  filter(new_reg == 1) # new dataframe with ONLY the new voters, 109990 observations
+
+md_voters_2024 |>
+  group_by(COUNTY) |>
+  summarise(new_reg = sum(new_reg)) |>
+  arrange(desc(new_reg))
+```
+
+**Q2** A better question is whether the new voters you found in Q1 are an outlier compared to other weeks this year. Using the original dataframe with 2024 registrants, use `mutate()` and lubridate to produce week numbers from the COUNTY_REGISTRATION_DATE (Lubridate has a function that turns a date into a week number. Use that to answer this question). Save that to the original dataframe. Then calculate how many voters are in each week. Describe the distribution of voters groups in a sentence - are the weeks from July 21-August 7 different from the rest, and if so, how?
+
+**A2**
+It looks like in the last week in the data ending on August 7th had a lower amount of registrations than most weeks leading up to it. The coupe of weeks prior (July 17th-July 31st) had larger spikes in new registrations. Earlier in the year around weeks 4-17 there was a steady flow of 3000-4000 new registrations per week. Then from week 24-31 we see a range of 4000-7000 new registrations per week.This last week in the data seems to be either incomplete or an outlier since theres a noticable dropoff from the trend. 
+
+```{r}
+unique(md_voters_2024$STATUS_CODE)
+md_voters_2024$STATUS_RECODE <- ifelse(md_voters_2024$STATUS_CODE == "A", 1, 0) # using the active voters as a baseline for "total" voters
+
+md_voters_2024 |>
+  mutate(week = week(COUNTY_REGISTRATION_DATE)) |>
+  group_by(week) |>
+  summarise(tot_reg = sum(STATUS_RECODE), 
+            new_reg = sum(new_reg), 
+            return_voters = tot_reg - new_reg) |> 
+  arrange(desc(week))
+# added a return_voters var which shows the total reg minus the new reg var. This shows us who in the registrations that week were not new voters. We can also see that toward the beginning of the year there were more new voters than total registrations, reflecting voter file maintenance and the declaration of some old voters as inactive. 
+```
+
+**Q3** Using lubridate, show which month saw the largest number of registrations. Does the answer help shed more light on Q2?
+**A3** 
+July saw the most new registrations
+```{r}
+md_voters_2024 |>
+  mutate(month = floor_date(COUNTY_REGISTRATION_DATE, "month")) |>
+  group_by(month) |>
+  summarise(tot_reg = sum(STATUS_RECODE), 
+            new_reg = sum(new_reg), 
+            return_voters = tot_reg - new_reg) |> 
+  arrange(desc(new_reg))
+
+```
+
+**Q4** Maryland has, officially, five regions: https://www.visitmaryland.org/article/maryland-regions. Modify the original dataframe again to add a `region` column based on the `COUNTY` value using case_when. Are you going to have to do this for every Maryland county plus Baltimore City? Yes, you are. Which regions and parties account for the most new voters?
+
+**A4** 
+The capital region and central region account for the most new voters. 
+
+```{r}
+unique(md_voters_2024$COUNTY)
+
+# the syntax for this was so tricky to figure out 
+md_voters_2024 <- md_voters_2024 |>
+  mutate(region = case_when(
+        (COUNTY == "Washington"| 
+         COUNTY == "Allegany" | 
+        COUNTY  == "Garrett")  ~ "Western Maryland",
+        (COUNTY == "Frederick" | 
+        COUNTY  == "Montgomery" | 
+        COUNTY  == "Prince George's") ~ "Capitol Region",
+        (COUNTY == "Anne Arundel" | 
+        COUNTY  == "Baltimore City" | 
+        COUNTY  == "Baltimore County"| 
+        COUNTY  == "Caroll" | 
+        COUNTY  == "Harford" | 
+        COUNTY  == "Howard") ~ "Central MD",
+        (COUNTY == "Calvert" | 
+        COUNTY  == "Charles" | 
+        COUNTY  == "Saint Mary's") ~ "Southern MD",
+        (COUNTY == "Queene Anne's" | 
+        COUNTY  == "Talbot" | 
+        COUNTY  =="Kent"| 
+        COUNTY  == "Caroline" | 
+        COUNTY  == "Dorchester" | 
+        COUNTY  == "Wicomico" | 
+        COUNTY  == "Somerset" | 
+        COUNTY  == "Worcester" | 
+        COUNTY  == "Cecil") ~ "Eastern Shore MD"
+      )  
+      ) 
+table(md_voters_2024$region)
+
+md_voters_2024|> 
+  group_by(region) |>
+  summarise(tot_reg = sum(STATUS_RECODE), 
+            new_reg = sum(new_reg), 
+            return_voters = tot_reg - new_reg) |> 
+  arrange(desc(new_reg))
+
+table(md_voters_2024$COUNTY)
+
+```
+
+**Q5** What's an additional question you could ask of this data?
+
+**A5** 
+Why are there so voters that are showing up outside of the regions? I'm sure I covered every county and region, and yet there is an NA column. Are there voters that are registered just under the state and outside of the county?
