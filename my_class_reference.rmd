@@ -98,4 +98,14 @@ maryland_winred_contributions %>%
 ?str_tot_title()
 ```
 
+```{r}
+############## other notes ###################
+?melt
+# base r
+# The melt() function in R programming is an in-built function. It enables us to reshape and elongate the data frames in a user-defined manner. It organizes the data values in a long data frame format. kinda like a pivot longer!
+# Syntax:
+# melt(data-frame, na.rm = FALSE, value.name = “name”, id = 'columns')
+```
+
+
 
