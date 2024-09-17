@@ -74,3 +74,28 @@ maryland_winred_contributions %>%
 
 ```
 
+```{r}
+################# Pre Lab 03 ##########################
+?mutate()
+# mutate() creates new columns that are functions of existing variables. It can also modify (if the name is the same as an existing column) and delete columns (by setting their value to NULL).
+
+?clean_names()
+
+# Resulting names are unique and consist only of the _ character, numbers, and letters. Capitalization preferences can be specified using the case parameter.
+
+?rename()
+# rename() changes the names of individual variables using new_name = old_name syntax; rename_with() renames columns using a function.
+
+?get_dupes()
+# For hunting duplicate records during data cleaning. Specify the data.frame and the variable combination to search for duplicates and get back the duplicated rows.
+
+?distinct
+# Keep only unique/distinct rows from a data frame. This is similar to unique.data.frame() but considerably faster.
+
+?str_sub
+# str_sub() extracts or replaces the elements at a single position in each string. str_sub_all() allows you to extract strings at multiple elements in every string.
+
+?str_tot_title()
+```
+
+

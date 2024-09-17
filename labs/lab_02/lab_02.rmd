@@ -42,7 +42,17 @@ Take a look at the data, getting familiar with what it contains. Most of the col
 Going down the list of population and most registrants, the results are very similar. The first 10 are almost the same across the two, with Carroll County having more population growth than relative new voters. 
 ```{r}
 
-md_voters_2024$new_reg <- ifelse(md_voters_2024$STATE_REGISTRATION_DATE == md_voters_2024$COUNTY_REGISTRATION_DATE,1,0) # creating a new dummy var that indicates new voters based on given definition
+md_voters_2024$new_reg <- ifelse(md_voters_2024$STATE_REGISTRATION_DATE == md_voters_2024$COUNTY_REGISTRATION_DATE,1,0) |> 
+  filter(COUNTY_REGISTRATION_DATE == "2024-07-21")# creating a new dummy var that indicates new voters based on given definition
+
+new_voters <- md_voters_2024 |> 
+  filter(STATE_REGISTRATION_DATE > '2024-07-21') |> 
+  filter(STATE_REGISTRATION_DATE == COUNTY_REGISTRATION_DATE)
+
+new_by_county <- new_voters |> 
+  group_by(COUNTY) |> 
+  summarize(voters = n()) |> 
+  arrange(desc(voters))
 
 table(md_voters_2024$new_reg) # seeing what the makeup of new voters in the data looks like
 
@@ -110,7 +120,7 @@ md_voters_2024 <- md_voters_2024 |>
         (COUNTY == "Anne Arundel" | 
         COUNTY  == "Baltimore City" | 
         COUNTY  == "Baltimore County"| 
-        COUNTY  == "Caroll" | 
+        COUNTY  == "Carroll" | 
         COUNTY  == "Harford" | 
         COUNTY  == "Howard") ~ "Central MD",
         (COUNTY == "Calvert" | 
