@@ -1,0 +1,147 @@
+---
+title: "lab_03"
+author: "Sonia Vargas"
+date: "2024-08-01"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load libraries and establish settings
+
+```{r}
+# Turn off scientific notation
+options(scipen=999)
+
+# Load the tidyverse
+library(tidyverse)
+
+# Load janitor
+library(janitor)
+```
+
+## Load data
+
+```{r}
+# Load MD slice of FEC House candidate contribution data
+md_contribs <- read_rds("data/lab_03.rds")
+```
+
+## Answer questions
+
+Q1: Which seven cities in Maryland had the largest *number* of contributions from donors? How many did each have? To answer this question, you'll have to clean the messy "contributor_city" field.
+
+Note: To answer this question, you'll need to see every variation of the "contributor_city" for the top seven cities, which you should identify through some initial analysis. Then find variations of them and change those variations into the most common version.
+
+A1:
+* Fell into a rabbit hole and tried to find every inconsistency/inaccuracy. Top 
+7 cities with cleaner data: Bethesda, Chevy Chase, Baltimore, Annapolis, Potomac, Silver Spring, Rockville
+
+```{r}
+
+table1 <- md_contribs |> 
+  group_by(contributor_city) |> 
+  summarise(contribs = n()) |> 
+  arrange(desc(contribs))
+
+unique(md_contribs$contributor_city)
+
+md_clean <- md_contribs |> 
+  mutate(contributor_city = case_when(
+    contributor_city == "BALRIMORE" ~ "BALTIMORE",
+    contributor_city == "BLATIMORE" ~ "BALTIMORE",
+    contributor_city == "SILVER SPRINGS" ~ "SILVER SPRING",
+    contributor_city == "4615 NORTH PARK AVE APT. 1410" ~ "CHEVY CHASE",
+    contributor_city == "POTAMIC" ~ "POTOMAC",
+    contributor_city == "ANAPOLIS" ~ "ANNAPOLIS",
+    contributor_city == "ROCKWELL" ~"ROCKVILLE",
+    contributor_city == "LUTHERVILLE TIMONI" ~ "LUTHERVILLE TIMONIUM",
+    contributor_city == "LUTHERVILLE TIMO" ~ "LUTHERVILLE TIMONIUM",
+    contributor_city == "LUTHERVILLE-TIMONIUM" ~ "LUTHERVILLE TIMONIUM",
+    contributor_city == "LUTHVLE TIMON" ~ "LUTHERVILLE TIMONIUM",
+    contributor_city == "BELAIR" ~ "BEL AIR",
+    contributor_city == "OWINS MILLS" ~ "OWINGS MILLS",
+    contributor_city == "N BETHESDA" ~ "NORTH BETHESDA",
+    contributor_city == "MT.AIRY" ~ "MOUNT AIRY",
+    contributor_city == "MT. AIRY" ~ "MOUNT AIRY",
+    contributor_city == "AAAAAA OXON" ~ "OXON HILL", 
+    contributor_city == "ST MARYS CITY" ~ "SAINT MARYS CITY",
+    contributor_city == "UPPR MARLBORO" ~ "UPPER MARLBORO",
+    contributor_city == "ST MICHELS" ~ "SAINT MICHAELS",
+    contributor_city == "ST MICHAELS" ~ "SAINT MICHAELS",
+    contributor_city == "NEW MARKED" ~ "NEW MARKET",
+    contributor_city == "SEVERNA" ~ "SEVERNA PARK",
+    contributor_city == "ELLICOTT" ~ "ELLICOTT CITY",
+    contributor_city == "ST. CHARLES" ~ "SAINT CHARLES",
+    contributor_city == "COLOMBIA" ~ "COLUMBIA",
+    contributor_city == "FT WASHINGTON" ~ "FORT WASHINGTON",
+    contributor_city == "BROOKVILLE" ~ "BROOKEVILLE",
+    TRUE ~ contributor_city
+  ))
+
+unique(md_clean$contributor_city)
+
+table2 <- md_clean |> 
+  group_by(contributor_city) |> 
+  summarise(contribs = n()) |> 
+  arrange(desc(contribs))
+
+```
+
+Q2: Find the 5-digit ZIP code in Maryland that had the highest total amount of contributions (by dollar value). You will need to use mutate to ensure that you have a zip code column with the first five characters from the existing zip code column.
+
+Where is that zip code and what kind of area is it, demographically? Which committee is the largest recipient of money from that zip code? How many of the top five recipients are Maryland candidates?
+
+A2: 
+* The highest dolar donated zip is 20817 with a total of $731,489.80 donated. This zip code is in Montgomery county and includes parts of Potomac, Bethesda, and North Bethesda. This area is generally higher-income, and 80% white. 
+* From this zip code, the most contributions in dollar amount have gone to the committee "HELMER FOR CONGRESS" with a total of $17,878.00. Two of the top five committees donated to from this zip code are for MD campaigns, Jaime Raskin and April Mcclain Delaney. 
+
+```{r}
+head(md_clean$contributor_zip)
+
+md_clean |> 
+  mutate(contributor_zip = str_sub(contributor_zip, start=1L, end=5L)) |>
+  group_by(contributor_zip) |> 
+  summarise(amount = sum(contribution_receipt_amount)) |> 
+  arrange(desc(amount))
+
+md_clean |> 
+  mutate(contributor_zip = str_sub(contributor_zip, start=1L, end=5L)) |>
+  filter(contributor_zip == "20817") |> 
+  group_by(committee_name) |> 
+  summarise(
+    amount = sum(contribution_receipt_amount),
+    contribs = n()
+    ) |> 
+  arrange(desc(amount))
+```
+
+Q3: Let's look at top individual donors. Write code to generate a list of top donors using name and city, adding up the total amount of contributions. What does the original data say about the top two donors - who are they and what do they do? Do you see anything in the list of top 10 donors that would make you uncertain about the accuracy of these results?
+
+A3: 
+* In the top 10 donors there is a Jacobsen, Mark P.; and Jacobsen, Mark. Unless,
+there is some sort of familial relationship between these two people it might be the same person.
+* When adding in occupation to the table it looks like Melanie is a Farmer, and 
+forgot to input their job for one donation. Mark P. is a CEO and/or works in Banking Services,
+and the other Mark Jacobsen also seems to have the same occuption.
+```{r}
+md_clean |> 
+  group_by(contributor_name) |> 
+  summarise(
+    total_amount = sum(contribution_receipt_amount)
+    ) |> 
+  arrange(desc(total_amount))
+
+md_clean |> 
+  group_by(contributor_name) |> 
+  summarise(
+    total_amount = sum(contribution_receipt_amount),
+    single_donation = contribution_receipt_amount,
+    job = contributor_occupation,
+    committee = committee_name
+    ) |> 
+  arrange(desc(total_amount))
+
+```
