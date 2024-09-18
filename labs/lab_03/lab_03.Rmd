@@ -95,8 +95,13 @@ Q2: Find the 5-digit ZIP code in Maryland that had the highest total amount of c
 Where is that zip code and what kind of area is it, demographically? Which committee is the largest recipient of money from that zip code? How many of the top five recipients are Maryland candidates?
 
 A2: 
-* The highest dolar donated zip is 20817 with a total of $731,489.80 donated. This zip code is in Montgomery county and includes parts of Potomac, Bethesda, and North Bethesda. This area is generally higher-income, and 80% white. 
-* From this zip code, the most contributions in dollar amount have gone to the committee "HELMER FOR CONGRESS" with a total of $17,878.00. Two of the top five committees donated to from this zip code are for MD campaigns, Jaime Raskin and April Mcclain Delaney. 
+* The highest dolar donated zip is 20817 with a total of $731,489.80 donated. 
+This zip code is in Montgomery county and includes parts of Potomac, Bethesda, 
+and North Bethesda. This area is generally higher-income, and 80% white. 
+* From this zip code, the most contributions in dollar amount have gone to the 
+committee "HELMER FOR CONGRESS" with a total of $17,878.00. Two of the top five 
+committees donated to from this zip code are for MD campaigns, Jaime Raskin and 
+April Mcclain Delaney. 
 
 ```{r}
 head(md_clean$contributor_zip)
