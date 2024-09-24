@@ -21,7 +21,7 @@ knitr::opts_chunk$set(echo = TRUE)
 **Task** Run the following code in the gray-colored codeblock below to install refinr.
 
 ```{r}
-install.packages('refinr')
+# install.packages('refinr')
 ```
 
 ### Task 2: Load libraries and settings
@@ -74,7 +74,7 @@ dc_food |>
 
 **Task** Run the following code to make a copy of the recipient_name field called recipient_clean, then use the `key_collision_merge` function from refinr to attempt to standarize similar values. Store it as a new object called cleaned_dc_food. Click the black arrow on the table to examine the recipient_name and recipient_clean columns. Looking at the results on the first two pages only (first 20 rows), name two changes the refinr package made, by comparing recipient_name to recipient_clean. 
 **Answer**
-Turned SCARLET OAK into Scarlet Oak, 
+Turned SCARLET OAK into Scarlet Oak
 ```{r}
 cleaned_dc_food <- dc_food |>
   mutate(recipient_clean=key_collision_merge(recipient_name)) |>
