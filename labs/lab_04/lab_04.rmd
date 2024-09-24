@@ -45,12 +45,13 @@ You'll need to load one data set, a CSV file of campaign expenditures located in
 
 ```{r}
 # Load the Maryland expenditures data table
-
+setwd("/Users/soniavargas/Documents/UMD/2024-2025/JOUR772_data_journalism/labs/lab_04")
+dc_food <- read_csv("dc-food-cleaner.csv")
 ```
 
 ## Answer questions
 
-**Q1.** You've been assigned to compare the spending priorities of the two campaigns, but they describe their spending differently using the `purpose` column. Using OpenRefine, create a project using the original CSV file, make a copy of the `purpose` column called `purpose_clean` and then standardize it, focusing on the purposes that appear most often or have the largest total amounts. You can transform the data as you want - making all records the same case, for example, to help. The goal is to be able to group together as many similar purpose values, so you can choose to call all transportation-related expenses the same thing.
+**Q1.** You've been assigned to compare the spending priorities of the two campaigns, but they describe their spending differently using the `purpose` column. Using OpenRefine, create a project using the original CSV file, make a copy of the `purpose` column called `purpose_clean` and then standardize it, focusing on the purposes that appear most often or have the largest total amounts. You ccan transform the data as you want - making all records the same case, for example, to help. The goal is to be able to group together as many similar purpose values, so you can choose to call all transportation-related expenses the same thing.
 
 How do you know when you're done? It's a judgment call, but you should be close to 100 unique values for `purpose_clean`, and maybe even below that number.
 
