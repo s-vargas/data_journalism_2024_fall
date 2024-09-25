@@ -45,7 +45,6 @@ You'll need to load one data set, a CSV file of campaign expenditures located in
 
 ```{r}
 # Load the Maryland expenditures data table
-setwd("/Users/soniavargas/Documents/UMD/2024-2025/JOUR772_data_journalism/labs/lab_04")
 dc_food <- read_csv("dc-food-cleaner.csv")
 ```
 
@@ -62,7 +61,8 @@ Then, using that `purpose_clean` column, write code to find the largest amounts 
 **A1.**
 
 ```{r}
-
+purpose <- read.csv("dc_food_cleaner_purpose.csv")
+unique(purpose$purpose_clean)
 ```
 
 **Q2.** Let's do some research on the top purposes from A1. Feel free to search the Web to understand those terms better if need be, and then write a description comparing and contrasting the two campaigns' largest categories of spending.
