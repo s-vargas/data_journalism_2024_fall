@@ -103,7 +103,7 @@ Moore |>
   arrange(desc(total))
 # we see here that Moore raised exactly $1,002,915 from NY, and $131,629 from IL.
 
-# Perez data: New York, California, Florida, Virginia, Illinois
+# Perez data: New York, California, Florida, Virginia
 Perez |> 
   filter(state == "NY" | state == "CA" | state == "FL" | state == "VA") |> 
   group_by(state) |> 
