@@ -50,6 +50,21 @@ King <- read.csv("King_ContributionsList.csv")
 # Path to data should be loaded from folder "data" i.e. read_csv("data/name_of_data.csv")
 
 # Clean required data and prepare for analysis if needed. 
+# This data has one column with an entire address of each donor. 
+# To successfully reverse engineer we need to tease out the states into its own col.
+# This is so that we are able to organize donations by states, as detailed in the story.
+# To do this, I am going to employ the following function.
+?str_sub_all()
+# all states are right before the zip code (-6 ch), and only have two letters (start at -8)
+Moore  <-  Moore |> 
+  mutate(state = str_sub(Contributor.Address, start=-8, end=-7))
+
+Perez  <-  Perez |> 
+  mutate(state = str_sub(Contributor.Address, start=-8, end=-7))
+
+King  <-  King |> 
+  mutate(state = str_sub(Contributor.Address, start=-8, end=-7))
+
 ```
 
 ## Sentences to Engineer
@@ -70,18 +85,6 @@ through str_sub function, all data has checked out as correctly represented in t
 
 ```{r}
 # Put code to reverse engineer sentence here
-
-# need to tease out the states into a col
-?str_sub_all()
-# all states are right before the zip code (-6 ch), and only have two letters (start at -9)
-Moore  <-  Moore |> 
-  mutate(state = str_sub(Contributor.Address, start=-8, end=-7))
-
-Perez  <-  Perez |> 
-  mutate(state = str_sub(Contributor.Address, start=-8, end=-7))
-
-King  <-  King |> 
-  mutate(state = str_sub(Contributor.Address, start=-8, end=-7))
 
 # Moore data: New York, Illinois
 Moore |> 
