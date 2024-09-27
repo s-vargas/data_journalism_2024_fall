@@ -30,6 +30,7 @@ options(scipen=999)
 library(tidyverse)
 library(janitor)
 library(lubridate)
+library(dplyr)
 
 ```
 
@@ -45,7 +46,8 @@ You'll need to load one data set, a CSV file of campaign expenditures located in
 
 ```{r}
 # Load the Maryland expenditures data table
-dc_food <- read_csv("dc-food-cleaner.csv")
+setwd("~/UMD/2024-2025/data_journalism_2024_fall/labs/lab_04")
+expenses <- read.csv("md_senate_expenses.csv")
 ```
 
 ## Answer questions
@@ -61,31 +63,108 @@ Then, using that `purpose_clean` column, write code to find the largest amounts 
 **A1.**
 
 ```{r}
-purpose <- read.csv("dc_food_cleaner_purpose.csv")
-unique(purpose$purpose_clean)
+expense_cleaner <- read.csv("md-senate-expenses-cleaner.csv")
+
+expense_cleaner |> 
+  group_by(candidate, purpose_clean) |> 
+  summarise(
+            total = sum(amount)
+            ) |> 
+  arrange(desc(total))
 ```
 
 **Q2.** Let's do some research on the top purposes from A1. Feel free to search the Web to understand those terms better if need be, and then write a description comparing and contrasting the two campaigns' largest categories of spending.
 
 **A2.**
+Media advertising for Alsobrooks, and ADS for Hogan - it seems that both campaigns'
+largest expense is advertising. Salary for Alsobrooks and fundraising for Hogan- 
+Alsobrooks spends more on paying employees as second largest expense, Hogan spends 
+money on fundraising activities.  
 
 **Q3.** Pick one of the top categories for each campaign and write code that shows how that spending has changed over time, if at all. You'll need to use lubridate for this. Write a couple of sentences describing that pattern.
 
 **A3.**
+* The advertising spending from the Alsobrooks campaign barely existed in Dec 2023.
+February saw the beginning of some more spending with $255,090, more than doubling
+in March with $610,954, and peaking in April with $2,196,550. This shows that the bulk
+of the spending ocurred in the month before the MD primary.
+* The ADS spending from the Hogan campaign follows a similar pattern, except Hogan
+shows a peak in May, the month of the primary. Both candidates taper off, but 
+still have high spending in the month after their peak spending. Both spending around half a million. 
 
 ```{r}
+expense_cleaner$date <- ymd(expense_cleaner$date)
 
+expense_cleaner |> 
+  filter(purpose_clean == "Media Advertising") |> 
+  mutate(month = floor_date(date, "month")) |>
+  group_by(month) |> 
+   summarise(
+    total = sum(amount)
+  ) |>
+  arrange(month)
+
+expense_cleaner |> 
+  filter(purpose_clean == "ADS") |> 
+  mutate(month = floor_date(date, "month")) |>
+  group_by(month) |> 
+   summarise(
+    total = sum(amount)
+  ) |>
+  arrange(month)
 
 ```
 
 **Q4.** Which committee has the larger payroll or salary spending so far? How many unique recipients of payroll/staff spending are there for each candidate?
 
 **A4.**
-
+* Alsobrooks has the larger payroll/salary with $822,015 in this dataset. Who gets paid,
+all individuals, are listed in the dataset.
+* Hogan seems to fund an organization called 'Purple Surfboard', headquartered in Annapolis.
+After some quick googling it seems that this is a term coined by Hogan after a successful
+reelection campaign- similar to "blue wave" terminology. I would believe that this is
+his registered company that staff/employees get paid through. He does seem to
+pay less than Alsobrooks, with $481,109. He does, however have a longer history with state politics
+and may be able to be more efficient with staff spending. 
 ```{r}
+# unique names
+expense_cleaner$names <- paste(expense_cleaner$last_name, " ", expense_cleaner$first_name)
 
+# Alsobrooks
+expense_cleaner |> 
+  filter(purpose_clean == "Salary") |> 
+  group_by(names) |> 
+   summarise(
+    total = sum(amount)
+  ) |> 
+  arrange(desc(total))
+# $822,015 total overall
+
+# Hogan
+expense_cleaner |> 
+  filter(purpose_clean == "STAFFING - SEE MEMO" |purpose_clean ==  "STAFFING SERVICES")
+
+expense_cleaner |> 
+  filter(purpose_clean == "STAFFING - SEE MEMO" |purpose_clean ==  "STAFFING SERVICES") |> 
+  group_by(organization_name) |> 
+   summarise(
+    total = sum(amount)
+  ) |> 
+  arrange(desc(total))
+# $481,109 total overall
 ```
 
 **Q5** What's the most interesting story idea you've found in this data?
 
 **A5**
+* I think the differences in staffing and salaries that are paid by each campaign is pretty interesting. 
+Im sure this has something to do with Alsobrooks needing to build up a campaign team
+to this scale for the first time. 
+* I am also interesting in knowing what the exact purposes
+of all of the car spending are for Hogan as funded by his campaign spending. With a 
+statewide campaign it would make sense to cover costs related to car travel, but
+more research into that specifically would be cool. 
+* When it comes to travel, Alsobrooks spent $65,189.83, and Hogan spent $55,343.51.
+These are similar numbers, and the data is for before and directly after the primary.
+Still, I wonder how with the nationalization of a campaign like Hogan's, why they have similar
+travel spending. Does Hogan take advantage of his national popularity? Does he travel outside of MD?
