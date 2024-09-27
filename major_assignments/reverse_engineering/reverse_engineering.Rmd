@@ -32,7 +32,7 @@ Loading required libraries for this analysis.
 
 In this section, describe the source of the data, write a basic data dictionary for data you are working with, and discuss any caveats or issues you discovered working with this data. 
 
-Data is provided by Professor Derrick Willis. Each dataset is composed of the 
+Data is provided by Professor Derek Willis. Each dataset is composed of the 
 donations information for each candidate. 
 
 ```{r}
