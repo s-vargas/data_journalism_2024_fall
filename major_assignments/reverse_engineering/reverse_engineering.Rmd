@@ -18,7 +18,9 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Introduction 
 
-In this notebook, we are reverse engineering the story, [Millions in out-of-state donations help fuel high-profile Maryland Democratic governor candidates](https://cnsmaryland.org/2022/03/03/millions-in-out-of-state-donations-help-fuel-high-profile-maryland-democratic-governor-candidates/)
+In this notebook, we are reverse engineering the story, 
+[Millions in out-of-state donations help fuel high-profile Maryland Democratic governor candidates]
+(https://cnsmaryland.org/2022/03/03/millions-in-out-of-state-donations-help-fuel-high-profile-maryland-democratic-governor-candidates/)
 
 ## Load libraries
 
@@ -30,11 +32,14 @@ Loading required libraries for this analysis.
 
 ## Load and Cleaning Data
 
-In this section, describe the source of the data, write a basic data dictionary for data you are working with, and discuss any caveats or issues you discovered working with this data. 
+In this section, describe the source of the data, write a basic data dictionary 
+for data you are working with, and discuss any caveats or issues you discovered 
+working with this data. 
 
 Data is provided by Professor Derek Willis. Each dataset is composed of the 
 donations information for each candidate. 
-
+This data has one column with an entire address of each donor. 
+To successfully reverse engineer we need to tease out the states into its own col.
 ```{r}
 library(tidyverse)
 library(janitor)
@@ -50,8 +55,7 @@ King <- read.csv("King_ContributionsList.csv")
 # Path to data should be loaded from folder "data" i.e. read_csv("data/name_of_data.csv")
 
 # Clean required data and prepare for analysis if needed. 
-# This data has one column with an entire address of each donor. 
-# To successfully reverse engineer we need to tease out the states into its own col.
+
 # This is so that we are able to organize donations by states, as detailed in the story.
 # To do this, I am going to employ the following function.
 ?str_sub_all()
@@ -72,7 +76,10 @@ In this notebook, we are reverse engineering five sentences from the story.
 
 ### Sentence 1
 
-* **Sentence text**: “Moore raised over $1 million in New York, and Perez gained over $226,000 from the state. Perez also received nearly $235,000 from California donors and raised over $100,000 in Florida and Virginia. Moore and King collected over $100,000 each from Illinois.”
+* **Sentence text**: “Moore raised over $1 million in New York, and Perez gained 
+over $226,000 from the state. Perez also received nearly $235,000 from California 
+donors and raised over $100,000 in Florida and Virginia. Moore and King collected 
+over $100,000 each from Illinois.”
 
 * **Analysis summary**: 
 * For the Moore dataset, it is confirmed that he raised over 
