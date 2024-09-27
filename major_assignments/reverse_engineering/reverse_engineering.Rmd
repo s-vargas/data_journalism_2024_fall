@@ -1,0 +1,171 @@
+---
+title: "Reverse Engineering Project"
+author: "Luke Denbo, Isabelle Jensen, Sonia Vargas"
+date: "9/28/24"
+output:
+  html_document:
+    theme: cerulean
+    highlight: pygments
+    toc: true
+    toc_float:
+      collapsed: true
+      smooth_scroll: false
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction 
+
+In this notebook, we are reverse engineering the story, [STORY NAME](STORY URL)
+
+## Load libraries
+
+Loading required libraries for this analysis.
+
+```{r echo=FALSE, message=FALSE}
+
+```
+
+## Load and Cleaning Data
+
+In this section, describe the source of the data, write a basic data dictionary for data you are working with, and discuss any caveats or issues you discovered working with this data. 
+
+Data is provided by Professor Derrick Willis. Each dataset is composed of the 
+donations information for each candidate. 
+
+```{r}
+library(tidyverse)
+library(janitor)
+library(lubridate)
+library(dplyr)
+
+# Load required data
+setwd("~/UMD/2024-2025/data_journalism_2024_fall/major_assignments/reverse_engineering/data")
+Moore <- read.csv("Moore_ContributionsList.csv")
+Perez <- read.csv("Perez_ContributionsList.csv")
+King <- read.csv("King_ContributionsList.csv")
+
+# Path to data should be loaded from folder "data" i.e. read_csv("data/name_of_data.csv")
+
+# Clean required data and prepare for analysis if needed. 
+```
+
+## Sentences to Engineer
+In this notebook, we are reverse engineering five sentences from the story.
+
+### Sentence 1
+
+* **Sentence text**: “Moore raised over $1 million in New York, and Perez gained over $226,000 from the state. Perez also received nearly $235,000 from California donors and raised over $100,000 in Florida and Virginia. Moore and King collected over $100,000 each from Illinois.”
+
+* **Analysis summary**: 
+* For the Moore dataset, it is confirmed that he raised over 
+$1 million in New York, and over $100,000 in Illinois. 
+* For the Perez data, it is confirmed that he raised $226,208 in New York, almost
+$235,000 in California, and over $100,000 in each Florida and Virignia.
+* For the King data, it is confirmed that He raised over $100,000 from Illinois. 
+* All of the data in this paragraph has been confirmed. After singling out the state
+through str_sub function, all data has checked out as correctly represented in the story. 
+
+```{r}
+# Put code to reverse engineer sentence here
+
+# need to tease out the states into a col
+?str_sub_all()
+# all states are right before the zip code (-6 ch), and only have two letters (start at -9)
+Moore  <-  Moore |> 
+  mutate(state = str_sub(Contributor.Address, start=-8, end=-7))
+
+Perez  <-  Perez |> 
+  mutate(state = str_sub(Contributor.Address, start=-8, end=-7))
+
+King  <-  King |> 
+  mutate(state = str_sub(Contributor.Address, start=-8, end=-7))
+
+# Moore data: New York, Illinois
+Moore |> 
+  filter(state == "NY" | state == "IL") |> 
+  group_by(state) |> 
+  summarise(
+    total = sum(Contribution.Amount)
+  ) |> 
+  arrange(desc(total))
+# we see here that Moore raised exactly $1,002,915 from NY, and $131,629 from IL.
+
+# Perez data: New York, California, Florida, Virginia, Illinois
+Perez |> 
+  filter(state == "NY" | state == "CA" | state == "FL" | state == "VA") |> 
+  group_by(state) |> 
+  summarise(
+    total = sum(Contribution.Amount)
+  ) |> 
+  arrange(desc(total))
+# we see here that Perez raised exactly $226,208.46 from NY, 
+# $234,749 from California, $123,178 from VA, and $110,639 from FL.
+
+# King data: Illinois
+King |> 
+  filter(state == "IL") |> 
+  group_by(state) |> 
+  summarise(
+    total = sum(Contribution.Amount)
+  ) |> 
+  arrange(desc(total))
+# King raised $125,055.4 in Illinois
+
+
+
+# Display results of code below this codeblock
+
+```
+
+### Sentence 2
+
+* **Sentence text**: [Paste in sentence to engineer here]
+* **Analysis summary**: [Write up two to three sentences describing the results of your analysis.  Were you able to confirm the finding? If not, why not?]
+
+```{r}
+# Put code to reverse engineer sentence here
+
+# Display results of code below this codeblock
+
+```
+
+### Sentence 3
+
+* **Sentence text**: [Paste in sentence to engineer here]
+* **Analysis summary**: [Write up two to three sentences describing the results of your analysis.  Were you able to confirm the finding? If not, why not?]
+
+```{r}
+# Put code to reverse engineer sentence here
+
+# Display results of code below this codeblock
+
+```
+
+### Sentence 4
+
+* **Sentence text**: [Paste in sentence to engineer here]
+* **Analysis summary**: [Write up two to three sentences describing the results of your analysis.  Were you able to confirm the finding? If not, why not?]
+
+```{r}
+# Put code to reverse engineer sentence here
+
+# Display results of code below this codeblock
+
+```
+
+### Sentence 5
+
+* **Sentence text**: [Paste in sentence to engineer here]
+* **Analysis summary**: [Write up two to three sentences describing the results of your analysis.  Were you able to confirm the finding? If not, why not?]
+
+```{r}
+# Put code to reverse engineer sentence here
+
+# Display results of code below this codeblock
+
+```
+
+-30-
