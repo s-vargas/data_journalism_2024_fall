@@ -48,9 +48,10 @@ library(dplyr)
 
 # Load required data
 setwd("~/UMD/2024-2025/data_journalism_2024_fall/major_assignments/reverse_engineering/data")
-Moore <- read_csv("Moore_ContributionsList.csv")
-Perez <- read_csv("Perez_ContributionsList.csv")
-King <- read_csv("King_ContributionsList.csv")
+
+Moore <- read_csv("data/Moore_ContributionsList.csv")
+Perez <- read_csv("data/Perez_ContributionsList.csv")
+King <- read_csv("data/King_ContributionsList.csv")
 
 # Path to data should be loaded from folder "data" i.e. read_csv("data/name_of_data.csv")
 
