@@ -37,7 +37,8 @@ Let’s explore.
 
 Let's say that we have Maryland county voter registration data from five different elections in five different files. They have the same record layout and the same number of counties (plus Baltimore City). We can combine them into a single dataframe.
 
-**Task** Load the five CSV files. Do they have the same column structure? **Answer**
+**Task** Load the five CSV files. Do they have the same column structure? 
+**Answer**
 
 ```{r}
 county_voters_2016 <- read_csv("data/county_voters_2016.csv")
@@ -71,7 +72,8 @@ Let’s start by reading in some Maryland 2020 county population data:
 
 ### Task 4: Loading population data
 
-**Task** Load the Maryland 2020 county population data **Answer**
+**Task** Load the Maryland 2020 county population data 
+**Answer**
 
 ```{r}
 maryland_population <- read_csv('data/maryland_population_2020.csv')
