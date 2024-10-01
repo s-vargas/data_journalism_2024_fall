@@ -45,6 +45,7 @@ library(tidyverse)
 library(janitor)
 library(lubridate)
 library(dplyr)
+library(refinr)
 
 # Load required data
 setwd("~/UMD/2024-2025/data_journalism_2024_fall/major_assignments/reverse_engineering/data")
@@ -52,7 +53,7 @@ setwd("~/UMD/2024-2025/data_journalism_2024_fall/major_assignments/reverse_engin
 Moore <- read_csv("data/Moore_ContributionsList.csv")
 Perez <- read_csv("data/Perez_ContributionsList.csv")
 King <- read_csv("data/King_ContributionsList.csv")
-Franchot <- read.csv("data/Franchot_ContributionsList.csv")
+Franchot <- read_csv("data/Franchot_ContributionsList.csv")
 Schulz <- read.csv("data/Schulz_ContributionsList.csv")
 Gansler <- read.csv("data/Gansler_ContributionsList.csv")
 
@@ -63,24 +64,53 @@ Gansler <- read.csv("data/Gansler_ContributionsList.csv")
 # This is so that we are able to organize donations by states, as detailed in the story.
 # To do this, I am going to employ the following function.
 ?str_sub_all()
+?str_detect
 
 # all states are right before the zip code (-6 ch), and only have two letters (start at -8)
-Moore  <-  Moore |> 
-  mutate(state = str_extract(`Contributor Address`,"\\b[A-Z]{2}(?= \\d{5}$)"))
+# Moore  <-  Moore |> 
+#   mutate(state = str_sub(`Contributor Address`, start = -8, end = -7))
+# 
+# table(Moore$state)
+# 
 
-Perez  <-  Perez |> 
-  mutate(state = str_extract(`Contributor Address`, "\\b[A-Z]{2}(?= \\d{5}$)"))
+# Perez  <-  Perez |> 
+#  mutate(state2 = str_sub(`Contributor Address`, start = -8, end = -7))
+# 
+# King  <-  King |>  
+#  mutate(state = str_sub(`Contributor Address`, start = -8, end = -7)) 
+# this address data is a lot messier than i thought, going to attempt a str_detect method
 
-King  <-  King |> 
-  mutate(state = str_extract(`Contributor Address`, "\\b[A-Z]{2}(?= \\d{5}$)"))
+states <- data.frame(
+  state_abbrv = c(" AK"," AL"," APO"," AR"," AZ"," CA"," CO"," CT"," DC"," DE"," FL"," GA",
+                     " GU"," HI"," IA"," ID"," IL"," IN"," KS"," KY"," LA"," MA"," MD",
+                     " ME"," MI"," MN"," MO"," MS"," MT"," NC"," ND"," NE"," NH"," NJ"," NM",
+                     " NV"," NY"," OH"," OK"," OR"," PA"," PR"," RI"," SC"," SD"," TN"," TX",
+                     " UT"," VA"," VI"," VT"," WA"," WI"," WV"," WY", "YT CA"))
+# 7 NON-STATES: AP(Armed Forces Pacific), PR(Puerto Rico), GU(Guam), VI(Virgin Islands), DC
+# CANADA: YT CA
+# the spaces here are very important, otherwise it will detect combinations of the
+# letters from within the address names
 
-Franchot <- Franchot |> 
-  mutate(state = str_extract(Contributor.Address, "\\b[A-Z]{2}(?= \\d{5}$)")) 
-  
-  # try to find a mstr_detect method to extract states esp for the franchot 
+for (state in states$state_abbrv) {
+  Moore$state[str_detect(Moore$`Contributor Address`, state)] <- state
+}
 
+for (state in states$state_abbrv) {
+  Perez$state[str_detect(Perez$`Contributor Address`, state)] <- state
+}
+
+for (state in states$state_abbrv) {
+  King$state[str_detect(King$`Contributor Address`, state)] <- state
+}
+
+for (state in states$state_abbrv) {
+  Franchot$state[str_detect(Franchot$`Contributor Address`, state)] <- state
+}
+
+table(Moore$state)
+table(Perez$state)
 table(King$state)
-
+table(Franchot$state)
 ```
 
 ## Sentences to Engineer
@@ -144,11 +174,27 @@ King |>
 
 ### Sentence 2
 
-* **Sentence text**: [Paste in sentence to engineer here]
-* **Analysis summary**: [Write up two to three sentences describing the results of your analysis.  Were you able to confirm the finding? If not, why not?]
+* **Sentence text**: Moore, a U.S. Army veteran and bestselling author, built a 
+campaign war chest that included over $2.3 million in out-of-state contributions. 
+Tom Perez, a former leader of the Democratic National Committee, raised nearly 
+$1.7 million in donations from outside Maryland.
+* **Analysis summary**: I was able to confirm both findings. Moore was found to have raised over $\$2.3$ million from out of state, and Perez almost $\$1.7$ million as the story states.
 
 ```{r}
 # Put code to reverse engineer sentence here
+Moore |> 
+  filter(state != " MD") |> # space is important cause thats how I coded the states
+  summarise(
+    M_total = sum(`Contribution Amount`)
+  )
+# 2,417,225	
+
+Perez |> 
+  filter(state != " MD") |> 
+  summarise(
+    P_total = sum(`Contribution Amount`)
+  )
+# 1,697,893
 
 # Display results of code below this codeblock
 
@@ -156,23 +202,46 @@ King |>
 
 ### Sentence 3
 
-* **Sentence text**: [Paste in sentence to engineer here]
-* **Analysis summary**: [Write up two to three sentences describing the results of your analysis.  Were you able to confirm the finding? If not, why not?]
+* **Sentence text**: John B. King, former secretary of Education under President Barack Obama, raised $2.2 million in campaign funding last year. Only 11%, just under $240,000, came from Maryland donors. King raised over $534,000 in New York alone.
+* **Analysis summary**: King raised a total of $~\$2.2$ million. $\$238,339$ came from MD, and $\$534,478$ came from NY. The ratio of MD donations is $~11\%$ of total donations
 
 ```{r}
 # Put code to reverse engineer sentence here
 
+King |> 
+    summarise(
+    K_total = sum(`Contribution Amount`)
+  )
+# Raised a total of $2,199,015
+King |> 
+  filter( state == " MD" | state == " NY") |> 
+  group_by(state) |> 
+    summarise(
+    K_total = sum(`Contribution Amount`)
+  )
+# MD donations: $238339; NY donations: $534,478
+238339/2199015 
 # Display results of code below this codeblock
 
 ```
 
 ### Sentence 4
 
-* **Sentence text**: [Paste in sentence to engineer here]
-* **Analysis summary**: [Write up two to three sentences describing the results of your analysis.  Were you able to confirm the finding? If not, why not?]
+* **Sentence text**: Moore, King and Perez stand in stark contrast to Peter Franchot, a former Maryland state delegate and current comptroller, who raised over 78% of his $1.66 million from inside Maryland.
+* **Analysis summary**: This is confirmed, as Franchot raised $\$1,304,121$ of his total $\$1,663,516$ contributions from Maryland. This comes out to 78% of total contributions from Maryland. Unsure why they used the language for "over 78%" when it comes out to 78.4% according to this data and how it is coded here. 
 
 ```{r}
 # Put code to reverse engineer sentence here
+Franchot |> 
+  summarise(total = sum(`Contribution Amount`))
+# $1,663,516
+
+Franchot |> 
+  filter( state == " MD") |> 
+  summarise(total = sum(`Contribution Amount`))
+# MD contributions: 1,304,121
+1304121/1663516
+# 78%
 
 # Display results of code below this codeblock
 
@@ -180,11 +249,24 @@ King |>
 
 ### Sentence 5
 
-* **Sentence text**: [Paste in sentence to engineer here]
-* **Analysis summary**: [Write up two to three sentences describing the results of your analysis.  Were you able to confirm the finding? If not, why not?]
+* **Sentence text**: Less than a third of the money Perez raised, 31%, came from Maryland donors.
+* **Analysis summary**: Perez raised a total of $\$2,458,688$, with $\$760,794.4$coming from MD. This comes out to 31% of his donations coming from Maryland donors, and aligns with the story. 
 
 ```{r}
 # Put code to reverse engineer sentence here
+Perez |>  
+  summarise(
+    total = sum(`Contribution Amount`)
+  )
+# 2,458,688 total donations
+Perez |> 
+  filter(state == " MD") |> 
+  summarise(
+    total = sum(`Contribution Amount`)
+  )
+# $760,794.4 from MD
+760794/2458688
+#30.9% come from MD
 
 # Display results of code below this codeblock
 
