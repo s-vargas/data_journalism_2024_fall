@@ -178,7 +178,9 @@ King |>
 campaign war chest that included over $2.3 million in out-of-state contributions. 
 Tom Perez, a former leader of the Democratic National Committee, raised nearly 
 $1.7 million in donations from outside Maryland.
-* **Analysis summary**: I was able to confirm both findings. Moore was found to have raised over $\$2.3$ million from out of state, and Perez almost $\$1.7$ million as the story states.
+* **Analysis summary**: I was able to confirm both findings. Moore was found to 
+have raised over $\$2.3$ million from out of state, and Perez almost $\$1.7$ million 
+as the story states.
 
 ```{r}
 # Put code to reverse engineer sentence here
@@ -202,8 +204,12 @@ Perez |>
 
 ### Sentence 3
 
-* **Sentence text**: John B. King, former secretary of Education under President Barack Obama, raised $2.2 million in campaign funding last year. Only 11%, just under $240,000, came from Maryland donors. King raised over $534,000 in New York alone.
-* **Analysis summary**: King raised a total of $~\$2.2$ million. $\$238,339$ came from MD, and $\$534,478$ came from NY. The ratio of MD donations is $~11\%$ of total donations
+* **Sentence text**: John B. King, former secretary of Education under President 
+Barack Obama, raised $2.2 million in campaign funding last year. Only 11%, just 
+under $240,000, came from Maryland donors. King raised over $534,000 in New York alone.
+* **Analysis summary**: King raised a total of $~\$2.2$ million. $\$238,339$ came 
+from MD, and $\$534,478$ came from NY. The ratio of MD donations is $~11\%$ of total 
+donations
 
 ```{r}
 # Put code to reverse engineer sentence here
@@ -227,8 +233,13 @@ King |>
 
 ### Sentence 4
 
-* **Sentence text**: Moore, King and Perez stand in stark contrast to Peter Franchot, a former Maryland state delegate and current comptroller, who raised over 78% of his $1.66 million from inside Maryland.
-* **Analysis summary**: This is confirmed, as Franchot raised $\$1,304,121$ of his total $\$1,663,516$ contributions from Maryland. This comes out to 78% of total contributions from Maryland. Unsure why they used the language for "over 78%" when it comes out to 78.4% according to this data and how it is coded here. 
+* **Sentence text**: Moore, King and Perez stand in stark contrast to Peter Franchot, 
+a former Maryland state delegate and current comptroller, who raised over 78% of 
+his $1.66 million from inside Maryland.
+* **Analysis summary**: This is confirmed, as Franchot raised $\$1,304,121$ of 
+his total $\$1,663,516$ contributions from Maryland. This comes out to 78% of 
+total contributions from Maryland. Unsure why they used the language for "over 
+78%" when it comes out to 78.4% according to this data and how it is coded here. 
 
 ```{r}
 # Put code to reverse engineer sentence here
@@ -249,8 +260,11 @@ Franchot |>
 
 ### Sentence 5
 
-* **Sentence text**: Less than a third of the money Perez raised, 31%, came from Maryland donors.
-* **Analysis summary**: Perez raised a total of $\$2,458,688$, with $\$760,794.4$coming from MD. This comes out to 31% of his donations coming from Maryland donors, and aligns with the story. 
+* **Sentence text**: Less than a third of the money Perez raised, 31%, came from 
+Maryland donors.
+* **Analysis summary**: Perez raised a total of $\$2,458,688$, with $\$760,794.4$
+coming from MD. This comes out to 31% of his donations coming from Maryland donors,
+and aligns with the story. 
 
 ```{r}
 # Put code to reverse engineer sentence here
