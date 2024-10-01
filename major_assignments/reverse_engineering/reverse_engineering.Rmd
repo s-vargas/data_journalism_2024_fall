@@ -27,7 +27,10 @@ In this notebook, we are reverse engineering the story,
 Loading required libraries for this analysis.
 
 ```{r echo=FALSE, message=FALSE}
-
+library(tidyverse)
+library(janitor)
+library(lubridate)
+library(dplyr)
 ```
 
 ## Load and Cleaning Data
@@ -41,10 +44,6 @@ donations information for each candidate.
 This data has one column with an entire address of each donor. 
 To successfully reverse engineer we need to tease out the states into its own col.
 ```{r}
-library(tidyverse)
-library(janitor)
-library(lubridate)
-library(dplyr)
 
 # Load required data
 setwd("~/UMD/2024-2025/data_journalism_2024_fall/major_assignments/reverse_engineering/data")
