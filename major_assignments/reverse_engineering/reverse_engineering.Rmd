@@ -45,7 +45,6 @@ library(tidyverse)
 library(janitor)
 library(lubridate)
 library(dplyr)
-library(refinr)
 
 # Load required data
 setwd("~/UMD/2024-2025/data_journalism_2024_fall/major_assignments/reverse_engineering/data")
