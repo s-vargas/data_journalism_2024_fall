@@ -82,7 +82,7 @@ states <- data.frame(
                      " ME"," MI"," MN"," MO"," MS"," MT"," NC"," ND"," NE"," NH"," NJ"," NM",
                      " NV"," NY"," OH"," OK"," OR"," PA"," PR"," RI"," SC"," SD"," TN"," TX",
                      " UT"," VA"," VI"," VT"," WA"," WI"," WV"," WY", "YT CA"))
-# 7 NON-STATES: AP(Armed Forces Pacific), PR(Puerto Rico), GU(Guam), VI(Virgin Islands), DC
+# 6 NON-STATES: AP(Armed Forces Pacific), PR(Puerto Rico), GU(Guam), VI(Virgin Islands), DC
 # CANADA: YT CA
 # the spaces here are very important, otherwise it will detect combinations of the
 # letters from within the address names
