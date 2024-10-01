@@ -97,6 +97,14 @@ maryland_winred_contributions %>%
 
 ?str_tot_title()
 ```
+```{r}
+################# Pre Lab 05 ##########################
+?bind_rows
+# Bind any number of data frames by row, making a longer result. This is similar to do.call(rbind, dfs), but the output will contain all columns that appear in any of the inputs.
+
+
+```
+
 
 ```{r}
 ############## other notes ###################
