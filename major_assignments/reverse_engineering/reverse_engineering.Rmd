@@ -54,8 +54,6 @@ Moore <- read_csv("data/Moore_ContributionsList.csv")
 Perez <- read_csv("data/Perez_ContributionsList.csv")
 King <- read_csv("data/King_ContributionsList.csv")
 Franchot <- read_csv("data/Franchot_ContributionsList.csv")
-Schulz <- read.csv("data/Schulz_ContributionsList.csv")
-Gansler <- read.csv("data/Gansler_ContributionsList.csv")
 
 # Path to data should be loaded from folder "data" i.e. read_csv("data/name_of_data.csv")
 
