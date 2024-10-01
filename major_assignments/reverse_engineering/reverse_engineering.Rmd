@@ -52,6 +52,9 @@ setwd("~/UMD/2024-2025/data_journalism_2024_fall/major_assignments/reverse_engin
 Moore <- read_csv("data/Moore_ContributionsList.csv")
 Perez <- read_csv("data/Perez_ContributionsList.csv")
 King <- read_csv("data/King_ContributionsList.csv")
+Franchot <- read.csv("data/Franchot_ContributionsList.csv")
+Schulz <- read.csv("data/Schulz_ContributionsList.csv")
+Gansler <- read.csv("data/Gansler_ContributionsList.csv")
 
 # Path to data should be loaded from folder "data" i.e. read_csv("data/name_of_data.csv")
 
@@ -60,15 +63,23 @@ King <- read_csv("data/King_ContributionsList.csv")
 # This is so that we are able to organize donations by states, as detailed in the story.
 # To do this, I am going to employ the following function.
 ?str_sub_all()
+
 # all states are right before the zip code (-6 ch), and only have two letters (start at -8)
 Moore  <-  Moore |> 
-  mutate(state = str_sub(Contributor.Address, start=-8, end=-7))
+  mutate(state = str_extract(`Contributor Address`,"\\b[A-Z]{2}(?= \\d{5}$)"))
 
 Perez  <-  Perez |> 
-  mutate(state = str_sub(Contributor.Address, start=-8, end=-7))
+  mutate(state = str_extract(`Contributor Address`, "\\b[A-Z]{2}(?= \\d{5}$)"))
 
 King  <-  King |> 
-  mutate(state = str_sub(Contributor.Address, start=-8, end=-7))
+  mutate(state = str_extract(`Contributor Address`, "\\b[A-Z]{2}(?= \\d{5}$)"))
+
+Franchot <- Franchot |> 
+  mutate(state = str_extract(Contributor.Address, "\\b[A-Z]{2}(?= \\d{5}$)")) 
+  
+  # try to find a mstr_detect method to extract states esp for the franchot 
+
+table(King$state)
 
 ```
 
