@@ -1,6 +1,6 @@
 ---
 title: "lab_05"
-author: "derek willis"
+author: "Sonia Vargas"
 date: "2024-09-27"
 output: html_document
 ---
@@ -14,6 +14,8 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 # load the tidyverse
 library(tidyverse)
+library(dplyr)
+library(lubridate)
 ```
 
 ## Getting Started
@@ -23,6 +25,8 @@ This week we'll be combining and joining data to make it more useful and to ask 
 We'll be doing something similar to what Ence Morse did for [this Washington Post story](https://www.washingtonpost.com/politics/2024/09/24/kamala-harris-younger-donors/?pwapi_token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJyZWFzb24iOiJnaWZ0IiwibmJmIjoxNzI3MzIzMjAwLCJpc3MiOiJzdWJzY3JpcHRpb25zIiwiZXhwIjoxNzI4NzA1NTk5LCJpYXQiOjE3MjczMjMyMDAsImp0aSI6ImIwYWMxNTk4LWMwMDgtNDE5Ny04MjAyLWVmMWNjZWFmYWZiMiIsInVybCI6Imh0dHBzOi8vd3d3Lndhc2hpbmd0b25wb3N0LmNvbS9wb2xpdGljcy8yMDI0LzA5LzI0L2thbWFsYS1oYXJyaXMteW91bmdlci1kb25vcnMvIn0.3-s0tBkMV7Y9DD21CBsKMlaliGlOKT2egCO-UFT735Y), just on a smaller scale.
 
 First, load two CSV contribution files in the `data` folder, one each for donations made in July and August, and then combine them into a single dataframe.
+
+###** FUN FACT!! I met/worked with Ence while working at WaPo's polling team this year! [Proof](https://www.washingtonpost.com/politics/2024/03/05/how-different-groups-voted-super-tuesday-primary-according-exit-polls/) ###
 
 ```{r}
 # load the Harris contribution data files and combine them
@@ -43,18 +47,23 @@ nv <- read_csv("data/new_voters.csv")
 Next join the Harris donations to the voter data. Remember, people's names are common, __so you'll want to use name columns and address information__. You'll need to figure out which columns to use from both dataframes. The new_voters data has both a single Address column and various parts of the address, such as HouseNumber. Make a plan for picking your join columns - try out some combinations - and save the results to a new dataframe.
 
 ```{r}
-library(dplyr)
+
 # join the combined Harris file to the new voters
 # you will need to determine what columns to use
 
 harris_combined <- harris_combined |> 
-  rename(Address = address_one) |>
-  rename(FirstName = first_name) |>
-  rename(LastName = last_name)
+  mutate(Address = address_one,
+         FirstName = first_name,
+         LastName = last_name)
 
-nv_combine <- harris_combined |> 
-  left_join(nv, join_by("Address", "FirstName", "LastName")) |> 
-  nrow()
+nv_combine <- nv |>
+  left_join(harris_combined, join_by("Address", "FirstName", "LastName"))
+
+nv_combine2 <- nv |>
+  left_join(harris_combined, join_by("Address", "LastName"))
+
+nv_combine3 <- nv |>
+  left_join(harris_combined, join_by("Address", "FirstName"))
 
 ```
 
@@ -62,23 +71,104 @@ nv_combine <- harris_combined |>
 
 Q1. Explain why you used the columns you did to make the join, and why that result is better than other ways you tried. Are there any problems with the join you made, such as the possibility of false positives?
 
-A1. 
+A1. I first mutated some new columns on the harris_combined data to match the 
+names of the columns on the new voters data. For my three attempts at joining I 
+used one combination with all three "Address", "Last Name" , "First Name". 
+This combination hound 1119,226 observations, the least of all of them.The 
+other two both used Address and either First Name or Last Name. The Address/Last Name
+join found 119,471 matches, the most of all of them. The Address/First Name join 
+found 119,230 matches. All of the three joins found new voters from the Harris data.
+I feel like there may be a possibility of false positives, but a full address along
+with full name sounds unlikely to me. The variety of how many new voters were joined
+to the data shows how different each method was. 
 
 Q2. Based on your join, how many donations to Harris have come from people who registered this year? How many unique people does that represent, and which donors have given the largest _number_ of donations since July 20? 
 
-A2. 
+A2. I think I have found 270 unique new registered donors. There looks to be about
+365 donations among those donors totaling to $23,038.
+Sophia Hoffer-Perkins, Brittany Musolino, and Eric Snipe 
+each have donated 7 times. 
 
 ```{r}
+glimpse(nv_combine)
+
+nv_combine |> 
+  filter(amount > 0.00) |> 
+  summarise(donations = sum(amount, na.rm = TRUE),
+            count = n())
+
+nv_combine |> 
+  group_by(LastName, FirstName, Address) |> 
+  summarise(donations = sum(amount, na.rm = TRUE),
+            count = n()) |> 
+  arrange(desc(donations))
+
+nv_combine |> 
+  group_by(LastName, FirstName, Address) |> 
+  filter(amount > 0.00) |> 
+  summarise(donations = sum(amount),
+            count = n()) |> 
+  arrange(desc(count))
+
 ```
 
 Q3. What are the party and gender breakdowns of those donors? How many donations has Harris gotten from non-Democrats?
 
-A3. 
+A3. Sophia Hoffer-Perkins and Brittany Musolino are female, and Eric Snipe is male.
+All three donors are Democrats. 43 donations came from non-Democrats. 
 
 ```{r}
+nv_combine |> 
+  group_by(LastName, FirstName, Address) |> 
+  filter(amount > 0.00) |> 
+  summarise(party = Party,
+            gender = Gender,
+            donations = sum(amount),
+            count = n()) |> 
+  arrange(desc(count))
+
+nv_combine |> 
+  mutate(nondem = case_when(Party != "DEM" ~ "Other",
+                             TRUE ~ Party)) |> 
+  group_by(nondem) |> 
+  filter(amount > 0.00) |> 
+  summarise(donations = sum(amount),
+            count = n()) |> 
+  arrange(desc(donations))
 
 ```
 
 Q4. Choose your own adventure: I want you to come up with a question you could ask of one of the dataframes we've created for this lab. It could involve just the new voters, or the donors or the joined dataframe, but it cannot be a variation of a previous question (so, for example, you can't ask, "How many Republicans have given to Harris"). First write the question and then try to answer it by writing code. If you're not sure of the exact code, try googling (or ask me for advice) but, at a minimum, describe what you think you'd have to do to answer it and what the results would look like. That can help.
 
 A4:
+Question: How many new voters are donating from each county? 
+* The typical distribution of donations that is expected is shown here. Most new voter donations
+come from MoCo, PG, Baltimore City, Baltimore County, and Anne Arundel.
+
+Questions: Where are the donating non-Democrats from?
+* The non-democrats new voter donors are coming from PG, MoCo, Anne Arundel, Baltimore
+County and Howard. The top 4 have shifted in order, with Howard surpassing Baltimore City. 
+This is probably expected with how densely Democratic Baltimore City typically is. 
+Still interesting to see representation from Howard, especially with its density of
+Asian American residents and their typical political behavior being less predictable 
+compared to other racial groups. 
+```{r}
+
+nv_combine |> 
+  filter(amount > 0.00) |> 
+  group_by(County) |> 
+  summarise(donations = sum(amount),
+            count = n()) |> 
+  arrange(desc(count))
+
+nv_combine |> 
+  mutate(nondem = case_when(Party != "DEM" ~ "Other",
+                             TRUE ~ Party)) |>
+  filter(nondem == "Other" & amount > 0.00) |> 
+  group_by(County) |> 
+  summarise(donations = sum(amount),
+            count = n()) |> 
+  arrange(desc(count))
+
+```
+
