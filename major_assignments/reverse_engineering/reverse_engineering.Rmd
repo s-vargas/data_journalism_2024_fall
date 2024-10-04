@@ -133,20 +133,20 @@ through str_sub function, all data has checked out as correctly represented in t
 
 # Moore data: New York, Illinois
 Moore |> 
-  filter(state == "NY" | state == "IL") |> 
+  filter(state == " NY" | state == " IL") |> 
   group_by(state) |> 
   summarise(
-    total = sum(Contribution.Amount)
+    total = sum(`Contribution Amount`)
   ) |> 
   arrange(desc(total))
 # we see here that Moore raised exactly $1,002,915 from NY, and $131,629 from IL.
 
 # Perez data: New York, California, Florida, Virginia
 Perez |> 
-  filter(state == "NY" | state == "CA" | state == "FL" | state == "VA") |> 
+  filter(state == " NY" | state == " CA" | state == " FL" | state == " VA") |> 
   group_by(state) |> 
   summarise(
-    total = sum(Contribution.Amount)
+    total = sum(`Contribution Amount`)
   ) |> 
   arrange(desc(total))
 # we see here that Perez raised exactly $226,208.46 from NY, 
@@ -154,10 +154,10 @@ Perez |>
 
 # King data: Illinois
 King |> 
-  filter(state == "IL") |> 
+  filter(state == " IL") |> 
   group_by(state) |> 
   summarise(
-    total = sum(Contribution.Amount)
+    total = sum(`Contribution Amount`)
   ) |> 
   arrange(desc(total))
 # King raised $125,055.4 in Illinois
