@@ -58,9 +58,11 @@ Since we have five dataframes, we’re going to need to pass them as a list, mea
 **Task** Combine the three files into a single data frame using the bind_rows() function, along with list(). Add a description of what this code does to your reference notebook.
 
 ```{r}
+
 # bind_rows with list
 county_voters_combined <- bind_rows(list(county_voters_2016, county_voters_2018, county_voters_2020, county_voters_2022, county_voters_2024))
 View(county_voters_combined)
+
 ```
 
 There are plenty of uses for bind_rows: any regularly updated data that comes in the same format like crime reports or award recipients or player game statistics. Or election results.
@@ -105,7 +107,8 @@ Remove the nrow and run it again for yourself. By default, dplyr will do a “na
 
 ```{r}
 # without nrow
-maryland_population |> left_join(county_voters_2020, join_by(COUNTY))
+maryland_population |> 
+  left_join(county_voters_2020, join_by(COUNTY))
 ```
 
 When the join column is obvious - it's the same name in both dataframes - R will make that connection automatically and tell you. Below we're assigning the result of the previous code to a new dataframe, but we've removed the explicit join_by() function. R still tells us what column(s) it used for the join.
@@ -113,9 +116,12 @@ When the join column is obvious - it's the same name in both dataframes - R will
 ### Task 7: Assign Joined Data to New Dataframe
 
 **Task** Create a new dataframe with population and voter data joined together. What does the output message below say about the join? **Answer**
+
 Joining with `by = join_by(COUNTY)`
 ```{r}
+
 maryland_population_with_voters <- maryland_population |> left_join(county_voters_2020)
+
 ```
 
 Now, with our joined data, we can answer questions in a more useful way. But joins can do even more than just bring data together; they can include additional data to enable you to ask more sophisticated questions. Right now we have registered voters and total population. But we can do more.
@@ -137,7 +143,10 @@ Again, we can use a left_join to make our demographic data available. This time 
 **Task** Join the demographic data to the our combined voting/population data. To do this, we need to specify the join columns since the names aren't the same.
 
 ```{r}
-maryland_population_with_voters_and_demographics <- maryland_population_with_voters |> left_join(maryland_demographics, join_by(COUNTY==NAME))
+
+maryland_population_with_voters_and_demographics <- maryland_population_with_voters |>
+  left_join(maryland_demographics, join_by(COUNTY==NAME))
+
 ```
 
 Now we’ve got population data and demographic data by county. That means we can draw from both datasets in asking our questions. For example, we could see the counties with the highest 18+ Black population as a percentage of all population 18 and over and also the percentage of Democrats in that county.

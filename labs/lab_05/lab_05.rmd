@@ -13,6 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 # load the tidyverse
+library(tidyverse)
 ```
 
 ## Getting Started
@@ -25,19 +26,36 @@ First, load two CSV contribution files in the `data` folder, one each for donati
 
 ```{r}
 # load the Harris contribution data files and combine them
+jul <- read_csv("data/july_harris.csv")
+aug <- read_csv("data/august_harris.csv")
+
+harris_combined <- bind_rows(list(jul, aug))
+View(harris_combined)
 ```
 
 Next, let's read in the new voters (people who registered in 2024):
 
 ```{r}
 # load the new voters data
+nv <- read_csv("data/new_voters.csv")
 ```
 
 Next join the Harris donations to the voter data. Remember, people's names are common, __so you'll want to use name columns and address information__. You'll need to figure out which columns to use from both dataframes. The new_voters data has both a single Address column and various parts of the address, such as HouseNumber. Make a plan for picking your join columns - try out some combinations - and save the results to a new dataframe.
 
 ```{r}
+library(dplyr)
 # join the combined Harris file to the new voters
 # you will need to determine what columns to use
+
+harris_combined <- harris_combined |> 
+  rename(Address = address_one) |>
+  rename(FirstName = first_name) |>
+  rename(LastName = last_name)
+
+nv_combine <- harris_combined |> 
+  left_join(nv, join_by("Address", "FirstName", "LastName")) |> 
+  nrow()
+
 ```
 
 ## Answer questions
