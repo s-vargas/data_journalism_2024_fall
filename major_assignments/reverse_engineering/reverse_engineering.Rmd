@@ -81,7 +81,7 @@ states <- data.frame(
                      " GU"," HI"," IA"," ID"," IL"," IN"," KS"," KY"," LA"," MA"," MD",
                      " ME"," MI"," MN"," MO"," MS"," MT"," NC"," ND"," NE"," NH"," NJ"," NM",
                      " NV"," NY"," OH"," OK"," OR"," PA"," PR"," RI"," SC"," SD"," TN"," TX",
-                     " UT"," VA"," VI"," VT"," WA"," WI"," WV"," WY", "YT CA"))
+                     " UT"," VA"," VI"," VT"," WA"," WI"," WV"," WY", " YT CA"))
 # 6 NON-STATES: AP(Armed Forces Pacific), PR(Puerto Rico), GU(Guam), VI(Virgin Islands), DC
 # CANADA: YT CA
 # the spaces here are very important, otherwise it will detect combinations of the
@@ -102,6 +102,22 @@ for (state in states$state_abbrv) {
 for (state in states$state_abbrv) {
   Franchot$state[str_detect(Franchot$`Contributor Address`, state)] <- state
 }
+
+# Now lets clean up that state var to be without the space
+Moore  <-  Moore |> 
+ mutate(state = str_sub(state, start = 2, end = 3))
+
+King  <-  King |>  
+ mutate(state = str_sub(state, start = 2, end = 3)) |> 
+  mutate(state = case_when(
+    state == "YT" ~ "CAN",
+    TRUE ~ state))
+
+Perez  <-  Perez |> 
+ mutate(state = str_sub(state, start = 2, end = 3))
+
+Franchot <-  Franchot |>  
+ mutate(state = str_sub(state, start = 2, end = 3))
 
 table(Moore$state)
 table(Perez$state)
@@ -133,7 +149,7 @@ through str_sub function, all data has checked out as correctly represented in t
 
 # Moore data: New York, Illinois
 Moore |> 
-  filter(state == " NY" | state == " IL") |> 
+  filter(state == "NY" | state == "IL") |> 
   group_by(state) |> 
   summarise(
     total = sum(`Contribution Amount`)
@@ -143,7 +159,7 @@ Moore |>
 
 # Perez data: New York, California, Florida, Virginia
 Perez |> 
-  filter(state == " NY" | state == " CA" | state == " FL" | state == " VA") |> 
+  filter(state == "NY" | state == "CA" | state == "FL" | state == "VA") |> 
   group_by(state) |> 
   summarise(
     total = sum(`Contribution Amount`)
@@ -154,15 +170,13 @@ Perez |>
 
 # King data: Illinois
 King |> 
-  filter(state == " IL") |> 
+  filter(state == "IL") |> 
   group_by(state) |> 
   summarise(
     total = sum(`Contribution Amount`)
   ) |> 
   arrange(desc(total))
 # King raised $125,055.4 in Illinois
-
-
 
 # Display results of code below this codeblock
 
@@ -181,14 +195,14 @@ as the story states.
 ```{r}
 # Put code to reverse engineer sentence here
 Moore |> 
-  filter(state != " MD") |> # space is important cause thats how I coded the states
+  filter(state != "MD") |> # space is important cause thats how I coded the states
   summarise(
     M_total = sum(`Contribution Amount`)
   )
 # 2,417,225	
 
 Perez |> 
-  filter(state != " MD") |> 
+  filter(state != "MD") |> 
   summarise(
     P_total = sum(`Contribution Amount`)
   )
@@ -216,7 +230,7 @@ King |>
   )
 # Raised a total of $2,199,015
 King |> 
-  filter( state == " MD" | state == " NY") |> 
+  filter( state == "MD" | state == "NY") |> 
   group_by(state) |> 
     summarise(
     K_total = sum(`Contribution Amount`)
@@ -244,7 +258,7 @@ Franchot |>
 # $1,663,516
 
 Franchot |> 
-  filter( state == " MD") |> 
+  filter( state == "MD") |> 
   summarise(total = sum(`Contribution Amount`))
 # MD contributions: 1,304,121
 1304121/1663516
@@ -270,7 +284,7 @@ Perez |>
   )
 # 2,458,688 total donations
 Perez |> 
-  filter(state == " MD") |> 
+  filter(state == "MD") |> 
   summarise(
     total = sum(`Contribution Amount`)
   )
