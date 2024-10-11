@@ -20,7 +20,8 @@ knitr::opts_chunk$set(echo = TRUE)
 options(scipen=999)
 
 # Load the tidyverse and any other libraries you'll need
-
+library(tidyverse)
+library(dplyr)
 ```
 
 ## Get Our PDF
@@ -51,20 +52,49 @@ You will need to read in and clean up the data so that it can be used for analys
 ```{r}
 # Party registrations
 
+party_reg <- read_csv("data/new_reg_party.csv")
+
+summary(party_reg)
+
+party_reg <- party_reg |>
+  rename(SUMMARY = ...1)|> 
+  mutate(TOTAL = DEM + REP + NLM + LIB + GRN + UNAF + OTH)
+
 ```
 
 ```{r}
 # Removals
 
+removals <- read_csv("data/removals.csv")
+summary(removals)
+removals <- removals |>
+  rename(summary = ...1)
 ```
 
 ```{r}
 # Changes
 
+changes <- read_csv("data/changes.csv")
+summary(changes)
+
 ```
 
 ```{r}
 # Current registrations
+
+current_reg <- read_csv("data/active_reg_county.csv")
+summary(current_reg)
+current_reg <- current_reg |> 
+  select(...1, DEM...12:OTH...18) |> 
+  rename(COUNTY = ...1,
+         DEM = DEM...12,
+         REP = REP...13,
+         NLM = NLM...14,
+         LIB = LIB...15,
+         GRN = GRN...16,
+         UNAF = UNAF...17,
+         OTH = OTH...18)|> 
+  mutate(TOTAL = DEM + REP + NLM + LIB + GRN + UNAF + OTH)
 
 ```
 
@@ -77,20 +107,50 @@ To answer the following questions, you'll need to calculate percentages and do o
 ```{r}
 # Party registrations
 
+party_reg22 <- read_csv("data/new_reg_party_22.csv")
+
+summary(party_reg22)
+
+party_reg22 <- party_reg22 |>
+  rename(SUMMARY = ...1)|> 
+  mutate(TOTAL = DEM + REP + GRN + LIB + WCP + UNAF + OTH + TOT)
+
+
 ```
 
 ```{r}
 # Removals
+
+removals22 <- read_csv("data/removals_22.csv")
+summary(removals22)
+removals22 <- removals22 |>
+  rename(SUMMARY = ...1)
 
 ```
 
 ```{r}
 # Changes
 
+changes22 <- read_csv("data/changes_22.csv")
+summary(changes22)
 ```
 
 ```{r}
 # Current registrations
+
+current_reg22 <- read_csv("data/active_reg_county_22.csv")
+summary(current_reg22)
+current_reg22 <- current_reg22 |> 
+  select(...1, DEM...12:OTH...18) |> 
+  rename(COUNTY = ...1,
+         DEM = DEM...12,
+         REP = REP...13,
+         GRN = GRN...14,
+         LIB = LIB...15,
+         WCP = WCP...16,
+         UNAF = UNAF...17,
+         OTH = OTH...18) |> 
+  mutate(TOTAL = DEM + REP + GRN + LIB + WCP + UNAF + OTH)
 
 ```
 
@@ -99,26 +159,149 @@ To answer the following questions, you'll need to calculate percentages and do o
 Q1. Calculate the percentage of registered Democrats, Republicans and unaffiliated voters for the entire state in September 2024 and September 2022, and then calculate the percentage change for those three party categories (the formula for percentage change is easy to remember: (New-Old)/Old). How would you describe the changes in these partisan categories in a story? What's the most interesting thing about these changes that would be the lede of that story?
 
 A1.
-
+There was a 1% decrease in registered Dems in Maryland from 2022 to 2024. Conversely,
+there was a 1% increase in registered Reps in Maryland from 2022 to 2024. Finally,
+we saw a 10% increase in Unaffiliated voters. It looks like more voters are becoming
+unsatisfied with a partisan registration and are attracted to nonpartisan options.
+Although, the volume of people leaving the Democratic party is much larger than the 
+volume entering the Republican party and Unaffiliating combined, even though the
+proportion is just 1%. There might be a greater dissatisfaction with the Democratic 
+party more so than a flight to other parties. 
 ```{r}
+# NEW 2024
+current_reg |> 
+  summarise(DEM = sum(DEM),
+         REP = sum(REP),
+         UNAF = sum(UNAF),
+         OTHER = sum(NLM) + sum(GRN) + sum(LIB) + sum(OTH),
+         TOTAL = DEM + REP + UNAF + OTHER)
+# DEM - 2219417; REP - 1009323; UNAF - 923927
+
+# OLD 2022
+current_reg22 |> 
+  summarise(DEM = sum(DEM),
+         REP = sum(REP),
+         UNAF = sum(UNAF),
+         OTHER = sum(WCP) + sum(GRN) + sum(LIB) + sum(OTH),
+         TOTAL = DEM + REP + UNAF + OTHER) 
+# DEM - 2250961; REP - 998905; UNAF - 841573
+
+# DEM CHANGE - -1%
+(2219417 - 2250961)/2250961
+2219417 - 2250961
+
+# REP CHANGE - +1%
+(1009323 - 998905)/998905
+1009323 - 998905
+
+# UNAF CHANGE - +10%
+(923927 - 841573)/841573
+923927 - 841573
 
 ```
 
 Q2. Among the Maryland jurisdictions with the most registered voters, which one had the biggest percentage increase in unaffiliated voters between 2022 and 2024? How did that county vote for governor in 2022 and for president in 2020? Contrast the partisan percentages of that county with the county that had the eighth-largest percentage increase in unaffiliated voters. You should display information from the data that shows the counties with the largest percentage increase first.
 
-A2.
-
+A2. Among the top 10 and the whole data set it appears that PG county had the
+greatest % increase in UNAF between 2022 and 2024. PG county voted for Moore-Miller
+in 2022, and Biden-Harris in 2020. Frederick county had the 8th largest percent 
+increase in UNAF voters. Frederick county has more evenly spread partisanship, while
+PG county is more heavily Democratic. 
 ```{r}
 
+current_reg |> 
+  select(COUNTY, UNAF, TOTAL) |> 
+  arrange(desc(TOTAL))
+
+current_reg22 |> 
+  select(COUNTY, UNAF, TOTAL) |> 
+  arrange(desc(TOTAL))
+
+# most registered voters top 5: MOCO, PG, Baltimore County, ANNE ARUNDEL, Baltimore City
+
+current_reg$UNAF22 = current_reg22$UNAF
+# because they are both organized by county, the numbers are in the right spots 
+# I double checked at least for the top 10 counties.
+
+# Calculating percent change of UNAF voters
+current_reg |> 
+  mutate(CHANGE = (UNAF-UNAF22)/UNAF22 * 100) |> 
+  select(COUNTY, UNAF, CHANGE, TOTAL) |> 
+  arrange(desc(TOTAL))
+
+# Sort by percent change
+current_reg |> 
+  mutate(CHANGE = (UNAF-UNAF22)/UNAF22 * 100) |> 
+  select(COUNTY, UNAF, CHANGE, TOTAL) |> 
+  arrange(desc(CHANGE))
+
+# Comparing partisan percentages
+current_reg |> 
+  filter(COUNTY == "PR. GEORGE'S" | COUNTY == "FREDERICK") |> 
+  mutate(DEM_tot = DEM/TOTAL*100,
+         REP_tot = REP/TOTAL*100,
+         UNAF_tot = UNAF/TOTAL*100,
+         OTH_tot = (NLM + LIB + GRN + OTH)/TOTAL*100) |> 
+  select(COUNTY, DEM_tot, REP_tot, UNAF_tot, OTH_tot, TOTAL)
+
+current_reg$COUNTY
 ```
 
 Q3. Do the party percentages of new registrants (% Dem, % Rep, % Unaffiliated) from September 2024 and September 2022 match the overall percentage of partisan registration in the state at those times?
 
 In other words, did new registrants mirror the overall partisan composition of the electorate, or were they different? Do any of the methods of registration vary significantly from the overall partisan pattern? Which method is worthy of further exploration?
 
-A3.
+A3. 
+*In 2024 the percentages look similar for Democrats, but there are more UNAF 
+new registrants than the proportion seen in the total registrations, and less new
+REP registrants than the real total. 
+*In 2022 the actual percentage for Democrats was 54%, and new party reg was 50%. 
+For Republicans the actual % was  24% and for new registrations they were 14%. 
+For Unaffiliateds, they made up 20% of MD registrants, but 29% of new registrations. 
+*For the summaries, in 2024 Absentee registration, by mail reg, and
+ELDERLY / DISABLED / SOC SEC registration seem the most Democratically leaning. 
+DESIGNATED STATE AGENCIES	has a interesting amount of UNAF registrations. 
+*For 2022 in person registration and absentee ballot registration has an interesting
+amount of other partisans making up a majority of the new registrations in those categories. 
+
 
 ```{r}
+# 2024 total reg
+current_reg |> 
+  summarise(DEM_tot = sum(DEM)/sum(TOTAL)*100,
+            REP_tot = sum(REP)/sum(TOTAL)*100,
+            UNAF_tot = sum(UNAF)/sum(TOTAL)*100) 
+# 2024 new reg by party
+party_reg |> 
+  summarise(DEM_tot = sum(DEM)/sum(TOTAL)*100,
+            REP_tot = sum(REP)/sum(TOTAL)*100,
+            UNAF_tot = sum(UNAF)/sum(TOTAL)*100) 
+
+#2024 reg proportion by summary
+party_reg |> 
+  mutate(DEM_tot = DEM/TOTAL*100,
+         REP_tot = REP/TOTAL*100,
+         UNAF_tot = UNAF/TOTAL*100) |> 
+  select(SUMMARY, DEM_tot, REP_tot, UNAF_tot, TOTAL)
+
+# 2022 total reg
+current_reg22 |> 
+  summarise(DEM_tot = sum(DEM)/sum(TOTAL)*100,
+            REP_tot = sum(REP)/sum(TOTAL)*100,
+            UNAF_tot = sum(UNAF)/sum(TOTAL)*100) 
+# 2022 new reg by party
+party_reg22 |> 
+  summarise(DEM_tot = sum(DEM)/sum(TOTAL)*100,
+            REP_tot = sum(REP)/sum(TOTAL)*100,
+            UNAF_tot = sum(UNAF)/sum(TOTAL)*100) 
+
+#2022 reg proportion by summary
+party_reg22 |> 
+  mutate(DEM_tot = DEM/TOTAL*100,
+         REP_tot = REP/TOTAL*100,
+         UNAF_tot = UNAF/TOTAL*100) |> 
+  select(SUMMARY, DEM_tot, REP_tot, UNAF_tot, TOTAL)
+
 
 ```
 
