@@ -68,7 +68,7 @@ party_reg <- party_reg |>
 removals <- read_csv("data/removals.csv")
 summary(removals)
 removals <- removals |>
-  rename(summary = ...1)
+  rename(SUMMARY = ...1)
 ```
 
 ```{r}
@@ -307,12 +307,30 @@ party_reg22 |>
 
 Q4. Choose your own adventure! Using both the 2024 and 2022 data for one of the dataframes (changes, removals or new registrations), ask and answer a question that makes at least one comparison and requires code to answer. That could involve calculating a percentage, percentage change or the raw difference between two columns.
 
-A4.
+A4. Question: What were the makeup of removals reasons between 2022 and 2024? 
+In 2022 77% of removals came from county transfers out, versus 70% in 2024. Does 
+this mean less people are moving county to county in 2024? More interestingly, in 
+2022 only 0.3% of removals were at the voter's request, versus 3% in 2024. This 
+can show how more people are tuned in and making these changed during an election year. 
 
 ```{r}
+removals |> 
+  mutate(TOTAL = DEM + REP + NLM + LIB + GRN + UNAF + OTH) |> 
+  summarise(REASON = SUMMARY, 
+            reason_perc = TOTAL / sum(TOTAL) * 100) |> 
+  arrange(desc(reason_perc))
+
+removals22 |> 
+  mutate(TOTAL = DEM + REP + GRN + LIB + WCP + UNAF + OTH) |> 
+  summarise(REASON = SUMMARY, 
+            reason_perc = TOTAL / sum(TOTAL) * 100) |> 
+  arrange(desc(reason_perc))
 
 ```
 
 Q5. What's the best story idea or question you've seen as a result of the work you've done in this lab?
 
 A5.
+From the earlier questions in the lab, the rise in the proportions of UNAF voters
+in different counties/the entire state is interesting. The partisan makeup of 
+registration methods is also somewhat intuitive with the dialogue around mail in voting as well.
