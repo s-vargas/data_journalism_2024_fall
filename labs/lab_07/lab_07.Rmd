@@ -35,7 +35,7 @@ You'll need your Census API Key:
 **Task** set your API Key *only* if you haven't already
 
 ```{r echo=FALSE}
-# census_api_key("7cd87e22bac185cc7a4cf64febec794690b90213", install=TRUE)
+# census_api_key("05dbf35b1686c511cc0a5a2956fd756755f39fe0", install=TRUE, overwrite = TRUE)
 ```
 
 ## Load and view ACS variables
@@ -46,8 +46,11 @@ You'll also need to load the list of American Community Survey variables from th
 
 ```{r}
 
+v22 <- load_variables(2022, "acs5", cache=TRUE)
+
+
 md <- get_acs(geography = "county",
-              variables = c(medincome = "B19013_001", age),
+              variables = c(sexbyage = "B01002A_001"),
               state = "MD",
               year = 2022)
 ```
@@ -57,15 +60,21 @@ md <- get_acs(geography = "county",
 **Q1** What is the Maryland jurisdiction with the lowest median age, according to the ACS 2022 5-year estimates? You will need to find the variable for median age first.
 
 **A1**
-
+Baltimore City has the lowest median age with 36.8 years old.
 ```{r}
+md |> 
+  arrange(estimate)
 ```
 
 **Q2** Which Maryland counties have a median age of at least 50? You can use the dataframe you just made to answer this, but you must write code to display only those counties with a median age of at least 50.
 
 **A2**
-
+Dorchester county, Kent County, Worcester County, and Talbot county all have median
+ages of at least 50. 
 ```{r}
+md |> 
+  filter(estimate >= 50)|> 
+  arrange(estimate)
 ```
 
 ## Ticket-Splitting
@@ -77,28 +86,91 @@ Ticket-splitting (voting for candidates from multiple parties) in today's politi
 Load the two CSV files in the `data` folder: one containing the ballot choices of Frederick voters in five races (governor, comptroller, attorney general and U.S. House) and the other containing information about Frederick's voting locations. You'll need to join them together.
 
 ```{r}
-
+frederick <- read_csv("data/frederick_cvr.csv")
+precincts <- read_csv("data/frederick_precincts.csv")
+fred_join <- frederick |> 
+  full_join(precincts, join_by("precinct"))
 ```
 
-**Q3** Let's answer some basic questions about ticket-splitting: how many voters voted for different parties in the governor and comptroller's race? How many voted for the same party in both races? What percentage of all voters split their tickets in those races? In how many cases did voters choose the same party in all five contests? What percentage of all voters does that represent?
+**Q3** Let's answer some basic questions about ticket-splitting: 
+1. how many voters voted for different parties in the governor and comptroller's race? 
+2. How many voted for the same party in both races? 
+3. What percentage of all voters split their tickets in those races? 
+4. In how many cases did voters choose the same party in all five contests? 
+5. What percentage of all voters does that represent?
 
 **A3**
+1. 11,871 voters out of the 107,303 in the data split the governor/comptroller ticket
+2. 95,221 voters voted for the same party
+3. 11%
+4. 89,916 voted for the same party across all 5 seats
+5. 83.8%
 
 ```{r}
+fred_join |> 
+  filter(comptroller != governor_lt_governor)
 
+fred_join |> 
+  filter(comptroller == governor_lt_governor)
+
+11871/107303*100
+
+fred_join |> 
+  filter(governor_lt_governor == comptroller & governor_lt_governor == attorney_general & governor_lt_governor == u_s_senator & governor_lt_governor == representative_in_congress_6)
+89916/107303*100
 ```
 
 **Q4** Now let's look for the zip codes where voters preferred Republicans in every race *except* the governor's race, where Dan Cox lost to Wes Moore by a wide margin. Write code to generate a dataframe of zip codes with the number of those voters for each of those zip codes, ordering the dataframe so that the zip code with the most ticket-splitters appears first.
 
 **A4**
+There were only 795 voters that voted REP for every race but DEM for governor. 
+out of those voters zip code 21702 has the most with 115 of them.
 
 ```{r}
-
+fred_moore_reps <- fred_join |> 
+  filter(governor_lt_governor == "DEM" & comptroller == "REP" & attorney_general == "REP" & u_s_senator == "REP" & representative_in_congress_6 == "REP") |> 
+  group_by(zipcode) |> 
+  summarise(total = n()) |> 
+  arrange(desc(total))
 ```
 
 **Q5** Let's find out more about those zip codes from A4. Using tidycensus, get a dataframe of Maryland zip codes and their median ages, then join it to the dataframe you produced in A4. NOTE: you'll need to ensure that the two columns you use for the join are the same datatype. Summarize your findings; how would you describe the zip codes with more non-Cox Republicans compared to those with fewer? Where are those leading zip codes located?
 
 **A5**
-
+The zipcodes with more non-Cox republicans are generally older than those with fewer!
+This is really interesting actually, I wonder why that might be. Was Cox that 
+much more favorable among younger crowds versus Moore? What about Moore was likeble
+to Frederick Republicans?
+The top 3 look to be located in Ijamsville, Jefferson, and  Myersville. All 3 of these
+are in more rural parts of Frederick county versus the city of Frederick. Maybe
+these jurisdictions have less bubble effects of Republican preferences because of that? 
 ```{r}
+md_zips <- get_acs(geography = "zcta",
+              variables = "B01002A_001",
+              state = "MD",
+              year = 2019)  # last year with full zip codes, was struggling here
+# I was trying to use 2022 and was confused why it wasn't working until I reviewed pre_lab again :P
+  
+md_zips <- md_zips |> 
+  rename(zipcode = GEOID) 
+
+fred_moore_reps$zipcode <- as.character(fred_moore_reps$zipcode)
+
+fred_ages <- fred_moore_reps |> 
+  left_join(md_zips, join_by("zipcode"))
+
+fred_ages <- fred_ages |> 
+  select(zipcode, total, estimate, moe) |> 
+  rename(med_age = estimate)
+
+# fancy visualization for visual analysis as well
+fred_ages |>
+  mutate(NAME = gsub(" ZIP, Maryland", "", zipcode)) |>
+  ggplot(aes(x = med_age, y = reorder(zipcode, med_age))) +
+  geom_errorbarh(aes(xmin = med_age - moe, xmax = med_age + moe)) +
+  geom_point(color = "red") +
+  labs(title = "Median age of Moore Republicans by zip in Frederick County, Maryland",
+       subtitle = "2018-2022 American Community Survey",
+       y = "",
+       x = "ACS estimate (bars represent margin of error)")
 ```
