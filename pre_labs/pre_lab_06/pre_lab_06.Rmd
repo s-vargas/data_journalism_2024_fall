@@ -98,6 +98,8 @@ You can now export that extracted table to a CSV file using the "Export" button.
 ### Task 5: Export the CSV file
 
 **Task** Export the CSV file to your pre_lab_06 folder and read it into R by running the following codeblock. What problems do you see with the data? **Answer**
+The data read in one of the rows as the headings. There are many NAs from the blank cells
+on the PDF.
 
 ```{r}
 benzie_2024 <- read_csv("tabula-Benzie Aug 6,2024 Official Precinct Results.csv")
@@ -114,7 +116,7 @@ Then we've got rows with NAs, plus office names mixed up with candidate names. L
 ### Task 6: Cleaning up & getting rid of rows we don't need
 
 **Task** Get rid of rows we don't need by running the codeblock below. What problems remain? **Answer**
-
+We can't tell what columns are what with the default titles. We also can't disaggregate party as easily.
 ```{r}
 benzie_2024 <- read_csv("tabula-Benzie Aug 6,2024 Official Precinct Results.csv", col_names = FALSE)
 
@@ -131,6 +133,8 @@ Ok, now we have numbers and candidates, but we still need better headers and a w
 
 **Task** Run the codeblock below. What changed, and what issues or problems remain? **Answer**
 
+There are descriptive column names now for the first 7 columns, A new column 'Office' was created to 
+indicate House vs Senate campaigns.There are still a lot of unnamed columns
 ```{r}
 benzie_2024 <- benzie_2024 |>
   separate(candidate, c("candidate", "party"), sep=' - ') |> 
