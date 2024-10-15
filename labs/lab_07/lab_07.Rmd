@@ -165,7 +165,7 @@ fred_ages <- fred_ages |>
 
 # fancy visualization for visual analysis as well
 fred_ages |>
-  mutate(NAME = gsub(" ZIP, Maryland", "", zipcode)) |>
+  mutate(zipcode = gsub(" ZIP, Maryland", "", zipcode)) |>
   ggplot(aes(x = med_age, y = reorder(zipcode, med_age))) +
   geom_errorbarh(aes(xmin = med_age - moe, xmax = med_age + moe)) +
   geom_point(color = "red") +
