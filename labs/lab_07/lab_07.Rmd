@@ -35,7 +35,7 @@ You'll need your Census API Key:
 **Task** set your API Key *only* if you haven't already
 
 ```{r echo=FALSE}
-census_api_key("YOUR API KEY", overwrite=TRUE)
+# census_api_key("7cd87e22bac185cc7a4cf64febec794690b90213", install=TRUE)
 ```
 
 ## Load and view ACS variables
@@ -45,6 +45,11 @@ You'll also need to load the list of American Community Survey variables from th
 **Task** load the variables from the 2022 5-year ACS and save them to a dataframe
 
 ```{r}
+
+md <- get_acs(geography = "county",
+              variables = c(medincome = "B19013_001", age),
+              state = "MD",
+              year = 2022)
 ```
 
 ## Answer questions

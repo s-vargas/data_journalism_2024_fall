@@ -250,7 +250,9 @@ median income zips in the same few counties? Or are some zipcodes outliers from
 the top counties as wholes?
 
 ```{r}
+
 md_zips_with_acs |> 
   arrange(desc(estimate))
+
 ```
 
