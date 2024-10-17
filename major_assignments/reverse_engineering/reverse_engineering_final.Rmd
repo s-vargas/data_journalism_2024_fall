@@ -22,7 +22,16 @@ In this notebook, we are reverse engineering the story,
 
 This is the version of our project notebook with the data cleaning section implementing
 case_when coding. In an earlier version we implemented a loop to detect states in the data. 
-That version can be seen here []()
+That version can be seen here [Reverse_Engineering_Older](https://github.com/s-vargas/data_journalism_2024_fall/blob/main/major_assignments/reverse_engineering/reverse_engineering_older.Rmd)
+In this older version we created a dataframe of state abbreviations. Then, through
+the loop a state column was created and would place the two-letter state abbreviation
+as the column observation if one of the dataframe's abbrv was detected in the address string. 
+It was efficient, but not exhaustive. In the newer version there was more work 
+involved to find the inconsistent formatting in the addresses and correctly code those
+states. However, this proved to be more accurate in finding which states had been 
+coded incorrectly, and the amount of international donations that needed to be 
+coded separately as well. Both methods were able to confirm the accuracy of the
+engineered sentences from the article. 
 ## Load libraries
 
 Loading required libraries for this analysis.
@@ -69,8 +78,6 @@ Franchot <- read_csv("data/Franchot_ContributionsList.csv")
 # formatted zipcodes (ie. 20740-, 20740-0000 ), or from addresses without states at
 # all so they are not where we expect the two letter combo to be.
 ```
-
-
 ```{r}
 #### MOORE DATA CLEANING ####
 
@@ -131,8 +138,6 @@ Moore <- Moore |>
 # all clean!
 table(Moore$state)
 ```
-
-
 ```{r}
 #### PEREZ DATA CLEANING ####
 
@@ -167,8 +172,6 @@ Perez <- Perez |>
 table(Perez$state)
 
 ```
-
-
 ```{r}
 #### KING DATA CLEANING ####
 
@@ -362,8 +365,6 @@ Franchot |>
 
 table(Franchot$state) # all clean!
 ```
-
-
 ## Sentences to Engineer
 In this notebook, we are reverse engineering five sentences from the story.
 
