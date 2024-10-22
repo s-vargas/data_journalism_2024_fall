@@ -50,7 +50,7 @@ v22 <- load_variables(2022, "acs5", cache=TRUE)
 
 
 md <- get_acs(geography = "county",
-              variables = c(sexbyage = "B01002A_001"),
+              variables = c(sexbyage = "B01002_001"),
               state = "MD",
               year = 2022)
 ```
@@ -60,7 +60,7 @@ md <- get_acs(geography = "county",
 **Q1** What is the Maryland jurisdiction with the lowest median age, according to the ACS 2022 5-year estimates? You will need to find the variable for median age first.
 
 **A1**
-Baltimore City has the lowest median age with 36.8 years old.
+Baltimore City has the lowest median age with 36 years old.
 ```{r}
 md |> 
   arrange(estimate)
@@ -69,8 +69,7 @@ md |>
 **Q2** Which Maryland counties have a median age of at least 50? You can use the dataframe you just made to answer this, but you must write code to display only those counties with a median age of at least 50.
 
 **A2**
-Dorchester county, Kent County, Worcester County, and Talbot county all have median
-ages of at least 50. 
+Worcester County, and Talbot county have median ages of at least 50. 
 ```{r}
 md |> 
   filter(estimate >= 50)|> 
@@ -146,7 +145,7 @@ are in more rural parts of Frederick county versus the city of Frederick. Maybe
 these jurisdictions have less bubble effects of Republican preferences because of that? 
 ```{r}
 md_zips <- get_acs(geography = "zcta",
-              variables = "B01002A_001",
+              variables = "B01002_001",
               state = "MD",
               year = 2019)  # last year with full zip codes, was struggling here
 # I was trying to use 2022 and was confused why it wasn't working until I reviewed pre_lab again :P
