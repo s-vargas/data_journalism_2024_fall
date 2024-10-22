@@ -1,0 +1,537 @@
+---
+title: "Reverse Engineering Project"
+author: "Luke Denbo, Isabelle Jensen, Sonia Vargas"
+date: "10/19/24"
+output:
+  html_document:
+    theme: cerulean
+    highlight: pygments
+    toc: true
+    toc_float:
+      collapsed: true
+      smooth_scroll: false
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## Introduction 
+
+In this notebook, we are reverse engineering the story, 
+[Millions in out-of-state donations help fuel high-profile Maryland Democratic governor candidates]
+(https://cnsmaryland.org/2022/03/03/millions-in-out-of-state-donations-help-fuel-high-profile-maryland-democratic-governor-candidates/)
+
+This is the version of our project notebook with the data cleaning section implementing
+case_when coding. In an earlier version we implemented a loop to detect states in the data. 
+That version can be seen here [Reverse_Engineering_Older](https://github.com/s-vargas/data_journalism_2024_fall/blob/main/major_assignments/reverse_engineering/reverse_engineering_older.Rmd)
+In this older version we created a dataframe of state abbreviations. Then, through
+the loop a state column was created and would place the two-letter state abbreviation
+as the column observation if one of the dataframe's abbrv was detected in the address string. 
+It was efficient, but not exhaustive. In the newer version there was more work 
+involved to find the inconsistent formatting in the addresses and correctly code those
+states. However, this proved to be more accurate in finding which states had been 
+coded incorrectly, and the amount of international donations that needed to be 
+coded separately as well. Both methods were able to confirm the accuracy of the
+engineered sentences from the article. 
+## Load libraries
+
+Loading required libraries for this analysis.
+
+```{r echo=FALSE, message=FALSE}
+library(tidyverse)
+library(janitor)
+library(lubridate)
+library(dplyr)
+```
+
+## Load and Cleaning Data
+
+In this section, describe the source of the data, write a basic data dictionary 
+for data you are working with, and discuss any caveats or issues you discovered 
+working with this data. 
+
+Data is provided by Professor Derek Willis. Each dataset is composed of the 
+donations information for each candidate. 
+This data has one column with an entire address of each donor. 
+To successfully reverse engineer we need to tease out the states into its own col.
+```{r}
+
+# Load required data
+Moore <- read_csv("data/Moore_ContributionsList.csv")
+Perez <- read_csv("data/Perez_ContributionsList.csv")
+King <- read_csv("data/King_ContributionsList.csv")
+Franchot <- read_csv("data/Franchot_ContributionsList.csv")
+
+# Path to data should be loaded from folder "data" i.e. read_csv("data/name_of_data.csv")
+
+```
+```{r}
+
+# Clean required data and prepare for analysis if needed. 
+
+# This is so that we are able to organize donations by states, as detailed in the story.
+# To do this, I am going to employ the following function.
+?str_sub_all()
+?str_detect
+# all states are right before the zip code (-6 ch), and only have two letters (start at -8)
+
+# We will check what states did not format correctly because of inconsistently 
+# formatted zipcodes (ie. 20740-, 20740-0000 ), or from addresses without states at
+# all so they are not where we expect the two letter combo to be.
+```
+```{r}
+#### MOORE DATA CLEANING ####
+
+# create the state column by isolating the 2 letter state abbreviation with str_sub
+Moore  <-  Moore |> 
+  mutate(state = str_sub(`Contributor Address`, start = -8, end = -7))
+
+# lets table that and see what weird addresses didnt work with the str_sub
+table(Moore$state)
+# list of rogue addresses and finding out where the addresses should be indicated as
+# 0 - 1 NORWAY
+# 21 - 1 MD
+# AE - 1 APO
+# Al - 1 SP
+# ap - 1 SINGAPORE
+# be - 1 AUS
+# D - 5 MD
+# Du - 1 Dubai UAE
+# g - 1  Hong Kong
+# is- 1 Lisbon Portugal
+# on - 1 UK
+# tc - 1 UK
+
+Moore |>  # this is to see the address of all of these outliers and find their true 'state'
+  filter(
+    state == " O" |
+    state == "21" |
+    state == "AE" |
+    state == "Al" |
+    state == "ap" |
+    state == "be" |
+    state == "D " |
+    state == "Du" |
+    state == "g " |
+    state == "is" |
+    state == "on" |
+    state == "tc"
+  ) |> 
+  select(`Contributor Address`, state)
+
+# cleaning up the rogue states and classifying them correctly
+Moore <- Moore |> 
+  mutate(state = case_when(
+    state == " O" ~ "NOR",
+    state == "D " ~ "MD",
+    state == "21" ~ "MD",
+    state == "SP" ~ "ES",
+    state == "ap" ~ "SG",
+    state == "be" ~ "AUS",
+    state == "Du" ~ "UAE",
+    state == "g " ~ "HK",
+    state == "is" ~ "POR",
+    state == "on" ~ "UK",
+    state == "tc" ~ "UK",
+    TRUE ~ state
+  ))
+
+# all clean!
+table(Moore$state)
+```
+```{r}
+#### PEREZ DATA CLEANING ####
+
+# create the state column by isolating the 2 letter state abbreviation with str_sub
+Perez  <-  Perez |> 
+ mutate(state = str_sub(`Contributor Address`, start = -8, end = -7))
+
+# lets table that and see what weird addresses didnt work with the str_sub
+table(Perez$state)
+# list of rogue addresses and finding out where the addresses should be indicated as
+# 21 - 1
+# AE - 1
+# D - 7
+
+# this is to see the address of all of these outliers and find their true 'state'
+Perez |> 
+  filter(state == "21"|
+         state == "D " |
+        state == "AE") |>
+  select(`Contributor Address`, state)
+
+# cleaning up the rogue states and classifying them correctly
+Perez <- Perez |> 
+  mutate(state = case_when(
+    state == "21" ~ "MD",
+    state == "D " ~ "MD",
+    state == "AE" ~ "AP",
+    TRUE ~ state
+  ))
+
+# all clean!
+table(Perez$state)
+
+```
+```{r}
+#### KING DATA CLEANING ####
+
+# create the state column by isolating the 2 letter state abbreviation with str_sub
+King  <-  King |>  
+ mutate(state = str_sub(`Contributor Address`, start = -8, end = -7)) 
+
+
+# lets table that and see what weird addresses didnt work with the str_sub
+table(King$state)
+# this is to see the address of all of these outliers and find their true 'state'
+# D - 1 MD
+# AP - 1 Military
+# e - 2 Canada
+# GU - 3 guam
+
+# this is to see the address of all of these outliers and find their true 'state'
+King |> 
+  filter(state == "D "|
+         state == "e ")
+
+# cleaning up the rogue states and classifying them correctly
+King <- King |> 
+  mutate(state = case_when(
+    state == "e " ~ "CAN",
+    state == "D " ~ "MD",
+    TRUE ~ state
+  ))
+
+# all clean!
+table(King$state)
+
+```
+```{r}
+#### FRANCHOT DATA CLEANING ####
+
+# create the state column by isolating the 2 letter state abbreviation with str_sub
+Franchot <-  Franchot |>  
+ mutate(state = str_sub(`Contributor Address`, start = -8, end = -7)) 
+
+# lets table that and see what weird addresses didnt work with the str_sub
+table(Franchot$state)
+
+# picking out the ones that did not come out right 
+Franchot |> 
+  filter(state == "00"|
+         state == "01" |
+         state == "03" |
+         state == "04" |
+         state == "05" |
+         state == "06" |
+         state == "07" |
+         state == "08" |
+         state == "09" |
+         state == "11" |
+         state == "13" |
+         state == "14" |
+         state == "15" |
+         state == "16" |
+         state == "18" |
+         state == "20" |
+         state == "21" |
+         state == "22" |
+         state == "23" |
+         state == "24" |
+         state == "33" |
+         state == "40" |
+         state == "60" |
+         state == "65" |
+         state == "70" |
+         state == "71" |
+         state == "74" |
+         state == "75" |
+         state == "77" |
+         state == "78" |
+         state == "79" |
+         state == "80" |
+         state == "81" |
+         state == "85" |
+         state == "87" |
+         state == "92" |
+         state == "93" |
+         state == "95" |
+         state == "A " |
+         state == "D " |
+         state == "C " |
+         state == "E " |
+         state == "L " |
+        state == "Y ") |> 
+  select(`Contributor Address`, state)
+
+# isolating ones that have more than 1 observation to see if it is 1 or more distinct states
+Franchot |>  
+  filter(state == "00"|
+         state == "01" |
+         state == "18" |
+         state == "21" |
+         state == "33" |
+         state == "70" |
+         state == "93" |
+         state == "95" |
+         state == "A " |
+         state == "D " |
+         state == "C " |
+         state == "E " |
+         state == "L " |
+        state == "Y ") |> 
+  select(`Contributor Address`, state) |> 
+  arrange(desc(state))
+# The following that have multiple observations AND multiple unique states
+Franch_odds <- Franchot |>  # the duplicates that have multiple states
+  filter(state == "00"|
+         state == "01" |
+         state == "21" |
+         state == "70" |
+         state == "A ") |> 
+  select(`Contributor Address`, state) |> 
+  arrange(desc(state))
+
+Franchot <- Franchot |> 
+  mutate(state = str_sub(`Contributor Address`, start = -8, end = -7)) |> 
+  # first doing the str_sub for the ones that have uniform address zip format
+  mutate(state = case_when( 
+    # cleaning the ones that didnt format right because of different address format
+    state == "00" ~ "MD", # also DC
+    state == "01" ~ "MD", # also VA
+    state == "03" ~ "MD",
+    state == "04" ~ "MD",
+    state == "05" ~ "MD",
+    state == "06" ~ "MD",
+    state == "07" ~ "MD",
+    state == "08" ~ "MD",
+    state == "09" ~ "MD",
+    state == "11" ~ "MD",
+    state == "13" ~ "MD",
+    state == "14" ~ "MD",
+    state == "15" ~ "MD",
+    state == "16" ~ "MD",
+    state == "18" ~ "VA",
+    state == "20" ~ "MD",
+    state == "21" ~ "MD", # and FL
+    state == "22" ~ "MD",
+    state == "23" ~ "MD",
+    state == "24" ~ "MD",
+    state == "33" ~ "PA",
+    state == "40" ~ "MD",
+    state == "60" ~ "MD",
+    state == "65" ~ "MD",
+    state == "70" ~ "MD", # also NJ
+    state == "71" ~ "MD",
+    state == "74" ~ "MD",
+    state == "75" ~ "MD",
+    state == "77" ~ "MD",
+    state == "78" ~ "MD",
+    state == "79" ~ "MD",
+    state == "80" ~ "MD",
+    state == "81" ~ "MD",
+    state == "85" ~ "MD",
+    state == "87" ~ "MD",
+    state == "92" ~ "MD",
+    state == "93" ~ "WY",
+    state == "95" ~ "FL",
+    state == "A " ~ "VA", # also PA, MA, VA
+    state == "D " ~ "MD",
+    state == "C " ~ "DC",
+    state == "E " ~ "DE",
+    state == "L " ~ "FL",
+    state == "Y " ~ "NY",
+    TRUE ~ state)) |>
+  mutate(state = case_when(
+    # finally, assigning the correct states to the leftovers that had duplicates 
+    # from the original state assignment method with str_sub
+    `Contributor Address` == "1735 Market Street  51st Floor  Philadelphia  PA 19103-" ~ "PA",
+    `Contributor Address` == "1950 Old Gallows Road #600  Vienna  VA 22182-" ~ "VA",
+    `Contributor Address` == "30 Main Street  Yarmouth Port  MA 02675-" ~ "MA",
+    `Contributor Address` == "95 Oxford Avenue  Cambridge  MA 06671-" ~ "MA",
+    `Contributor Address` == "15 America Ave.  Suite 302  Lakewood  NJ 08701-4594" ~ "NJ",
+    `Contributor Address` == "4306 Lake Woodbourne Dr.  Jacksonville  FL 32217-4482" ~ "FL",
+    `Contributor Address` == "5818 Robins Nest Ln.  Burke  VA 22015-3118" ~ "VA",
+    `Contributor Address` == "733 - 15th St.  N.W.  Apt. 719  Washington  DC 20005-2163" ~ "DC",
+    `Contributor Address` == "500 Eighth Street  NW  Washington  DC 20004-2131" ~ "DC",
+    TRUE ~ state
+  ))
+
+# checking to see if most of the addresses changed to the correct state 
+
+Franchot |> 
+  filter(state == "PA" | state == "VA" | state == "MA" | state == "FL" | state == "NJ") |> 
+    select(`Contributor Address`, state) |> 
+  arrange(state)
+
+table(Franchot$state) # all clean!
+```
+## Sentences to Engineer
+In this notebook, we are reverse engineering five sentences from the story.
+
+### Sentence 1
+
+* **Sentence text**: “Moore raised over $1 million in New York, and Perez gained 
+over $226,000 from the state. Perez also received nearly $235,000 from California 
+donors and raised over $100,000 in Florida and Virginia. Moore and King collected 
+over $100,000 each from Illinois.”
+
+* **Analysis summary**: 
+* For the Moore dataset, it is confirmed that he raised over 
+$1 million in New York, and over $100,000 in Illinois. 
+* For the Perez data, it is confirmed that he raised $226,208 in New York, almost
+$235,000 in California, and over $100,000 in each Florida and Virignia.
+* For the King data, it is confirmed that He raised over $100,000 from Illinois. 
+* All of the data in this paragraph has been confirmed. After singling out the state
+through str_sub function, all data has checked out as correctly represented in the story. 
+
+```{r}
+# Put code to reverse engineer sentence here
+
+# Moore data: New York, Illinois
+Moore |> 
+  filter(state == "NY" | state == "IL") |> 
+  group_by(state) |> 
+  summarise(
+    total = sum(`Contribution Amount`)
+  ) |> 
+  arrange(desc(total))
+# we see here that Moore raised exactly $1,002,915 from NY, and $131,629 from IL.
+
+# Perez data: New York, California, Florida, Virginia
+Perez |> 
+  filter(state == "NY" | state == "CA" | state == "FL" | state == "VA") |> 
+  group_by(state) |> 
+  summarise(
+    total = sum(`Contribution Amount`)
+  ) |> 
+  arrange(desc(total))
+# we see here that Perez raised exactly $226,208.46 from NY, 
+# $234,749 from California, $123,178 from VA, and $110,639 from FL.
+
+# King data: Illinois
+King |> 
+  filter(state == "IL") |> 
+  group_by(state) |> 
+  summarise(
+    total = sum(`Contribution Amount`)
+  ) |> 
+  arrange(desc(total))
+# King raised $125,055.4 in Illinois
+
+# Display results of code below this codeblock
+
+```
+
+### Sentence 2
+
+* **Sentence text**: Moore, a U.S. Army veteran and bestselling author, built a 
+campaign war chest that included over $2.3 million in out-of-state contributions. 
+Tom Perez, a former leader of the Democratic National Committee, raised nearly 
+$1.7 million in donations from outside Maryland.
+* **Analysis summary**: I was able to confirm both findings. Moore was found to 
+have raised over $\$2.3$ million from out of state, and Perez almost $\$1.7$ million 
+as the story states.
+
+```{r}
+# Put code to reverse engineer sentence here
+Moore |> 
+  filter(state != "MD") |> 
+  summarise(
+    M_total = sum(`Contribution Amount`)
+  )
+# 2,387,166	
+
+Perez |> 
+  filter(state != "MD") |> 
+  summarise(
+    P_total = sum(`Contribution Amount`)
+  )
+# 1,695,893
+
+# Display results of code below this codeblock
+
+```
+
+### Sentence 3
+
+* **Sentence text**: John B. King, former secretary of Education under President 
+Barack Obama, raised $2.2 million in campaign funding last year. Only 11%, just 
+under $240,000, came from Maryland donors. King raised over $534,000 in New York alone.
+* **Analysis summary**: King raised a total of $~\$2.2$ million. $\$238,527$ came 
+from MD, and $\$534,478$ came from NY. The ratio of MD donations is $~11\%$ of total 
+donations
+
+```{r}
+# Put code to reverse engineer sentence here
+
+King |> 
+    summarise(
+    K_total = sum(`Contribution Amount`)
+  )
+# Raised a total of $2,199,015
+King |> 
+  filter( state == "MD" | state == "NY") |> 
+  group_by(state) |> 
+    summarise(
+    K_total = sum(`Contribution Amount`)
+  )
+# MD donations: $238527; NY donations: $534,478
+238527/2199015 
+# Display results of code below this codeblock
+
+```
+
+### Sentence 4
+
+* **Sentence text**: Moore, King and Perez stand in stark contrast to Peter Franchot, 
+a former Maryland state delegate and current comptroller, who raised over 78% of 
+his $1.66 million from inside Maryland.
+* **Analysis summary**: This is confirmed, as Franchot raised $\$1,306,371$ of 
+his total $\$1,663,516$ contributions from Maryland. This comes out to 78% of 
+total contributions from Maryland. Unsure why they used the language for "over 
+78%" when it comes out to 78.3% according to this data and how it is coded here. 
+
+```{r}
+# Put code to reverse engineer sentence here
+Franchot |> 
+  summarise(total = sum(`Contribution Amount`))
+# $1,663,516
+
+Franchot |> 
+  filter( state == "MD") |> 
+  summarise(total = sum(`Contribution Amount`))
+# MD contributions: 1,306,371
+1306371/1663516
+# 78%
+
+# Display results of code below this codeblock
+
+```
+
+### Sentence 5
+
+* **Sentence text**: Less than a third of the money Perez raised, 31%, came from 
+Maryland donors.
+* **Analysis summary**: Perez raised a total of $\$2,458,688$, with $\$762,794.4$
+coming from MD. This comes out to 31% of his donations coming from Maryland donors,
+and aligns with the story. 
+
+```{r}
+# Put code to reverse engineer sentence here
+Perez |>  
+  summarise(
+    total = sum(`Contribution Amount`)
+  )
+# 2,458,688 total donations
+Perez |> 
+  filter(state == "MD") |> 
+  summarise(
+    total = sum(`Contribution Amount`)
+  )
+# $762,794.4 from MD
+762794/2458688
+#31.0% come from MD
+
+# Display results of code below this codeblock
+
+```
