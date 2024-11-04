@@ -23,6 +23,7 @@ knitr::opts_chunk$set(echo = TRUE)
 # load libraries here
 library(tidyverse)
 library(janitor)
+library(tidycensus)
 ```
 
 ## Questions
@@ -69,6 +70,9 @@ Your chart MUST:
 Tell me below why you picked the CSV you did. If you made any changes to the data, put that code below.
 
 **A2.** 
+I think youth voting is super interesting, and seeing the levels of engagement across time and counties would be interesting. 
+Question: Which day has the greatest contribution (%) of youth turnout for each county over the 6 days?
+[Chart](https://datawrapper.dwcdn.net/hUNnc/2/)
 
 ```{r}
 youth <- read_csv("data/ev_totals_18_24.csv") # read in data
@@ -83,20 +87,31 @@ colnames(youth) <- c("Day1", "Day2","Day3","Day4","Day5","Day6")
 
 youth$County <- row.names(youth) 
 
+# I dont need these FIPS codes, but wanted to try to still get them and clean up my file. 
 # In the pre_lab there is mention of a tigris package but it wasn't used in the pre lab so im going to improvise and take from the previous data
 FIPS <- md_gov_county |> 
   select(Fips_Code, County) # already have this in my environment so creating a subset with just counties and FIPS
 youth <- youth |> 
   full_join(FIPS, join_by("County"))
+# this also helped to get rid of the row names and consolidate
 
 youth[,1:6] <- as.numeric(unlist(youth[,1:6])) # coercing into numeric values so i can get a total value column
 is.numeric(youth$V1) # passed
 
 youth <- youth |> 
-  mutate(tot = V1+V2+V3+V4+V5+V6) |> # total column
-  select(Fips_Code, County, Day1, Day2, Day3, Day4, Day5, Day6, tot) # reorganize the column order
+  mutate(tot = Day1 + Day2 + Day3 + Day4 + Day5 + Day6, # total column
+         perc1 = Day1/tot*100, # percent of total votes in each county for each day
+         perc2 = Day2/tot*100,
+         perc3 = Day3/tot*100,
+         perc4 = Day4/tot*100,
+         perc5 = Day5/tot*100,
+         perc6 = Day6/tot*100) |> 
+  select(Fips_Code, County, Day1, Day2, Day3, Day4, Day5, Day6, perc1, perc2, perc3, perc4, perc5, perc6, tot) # reorganize the column order
 # all clean!
 
+write_csv(youth, "data/youth2.csv")
+
+summary(youth)
 ```
 
 **Q3.** After reading the recent CNN story about fundraising called "[How elderly dementia patients are unwittingly fueling political campaigns](https://www.cnn.com/interactive/2024/10/politics/political-fundraising-elderly-election-invs-dg/)," you decide to dig into the habits of Maryland political donors who give money via ActBlue and WinRed.
@@ -117,6 +132,34 @@ Then export each dataframe using `write_csv` and make two (2) choropleth maps in
 Compare the two maps. What do you think are the most interesting story ideas in both, and what would you want to know more about? Put the answer below along with the URLs of your maps.
 
 **A3.** 
+[Winred Map](https://datawrapper.dwcdn.net/C0xuA/1/)
+[ActBlue Map](https://datawrapper.dwcdn.net/XPh1L/1/)
+I think the one of the most interesting stories about this is the 
+difference in per capita rates and geographics. 
+The winred map shows less zip codes with higher donation proportions, but similar per capita rates of donations to the act blue map.
+The Actblue map displays a similar pattern in that there are some more rural zips that have very high per capita rates. This would be interesting to see why some zips have high per capitas in these further out areas. 
 
 ```{r}
+winred <- read_csv("data/md_winred_zip_totals.csv")
+actblue <- read_csv("data/md_actblue_zip_totals.csv")
+
+pop2020 <- get_acs(geography = "zcta", 
+                   variables = "B01003_001", 
+                   year = 2020)
+
+pop2020 <- pop2020 |> 
+  rename(zip = GEOID) |> 
+  mutate(zip = as.double(zip))
+  
+winred <- winred |> 
+  left_join(pop2020, by = "zip") |> 
+  mutate(donation_num = donations/estimate*1000)
+
+actblue <- actblue |> 
+  left_join(pop2020, by = "zip")|> 
+  mutate(donation_num = donations/estimate*1000)
+
+
+write_csv(winred, "data/winred.csv")
+write_csv(actblue, "data/actblue.csv")
 ```
