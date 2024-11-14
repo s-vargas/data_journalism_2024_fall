@@ -1,6 +1,6 @@
 ---
 title: "lab_11"
-author: "Derek Willis"
+author: "Sonia Vargas"
 date: "2024-11-09"
 output: html_document
 ---
@@ -18,7 +18,13 @@ knitr::opts_chunk$set(echo = TRUE)
 **Task** Create a codeblock and load appropriate packages and settings for this lab.
 
 ```{r}
-
+#| output: false
+library(rvest)
+library(tidyverse)
+library(janitor)
+library(ggplot2)
+library(ggthemes)
+library(lubridate)
 ```
 
 
@@ -31,19 +37,84 @@ Let's get to scraping. We'll be working on collecting information about Maryland
 **A1**
 
 ```{r}
+# Step 1: save url
+fred_url <- "https://elections.maryland.gov/elections/2024/general_Results/gen_results_2024_by_county_11.html"
 
+# Step 2: save html + scrape table
+fred_table <- fred_url |>
+  read_html()|>
+  html_table()
+fred_table
+
+# Step 3: Extract BOE table
+fred_table <- fred_table[[9]]
+
+# Step 4: Clean data, remove commas, coerce data, remove row
+fred_table <- fred_table |> 
+  slice(-9) |>
+  mutate(`Early Voting` = as.numeric(gsub(",","", `Early Voting`))) |>
+  mutate(`Election Day` = as.numeric(gsub(",","", `Election Day`))) |>
+  mutate(`Mail-In Ballot` = as.numeric(gsub(",","", `Mail-In Ballot`))) |> 
+  mutate(Provisional = as.numeric(gsub(",","", Provisional))) |> 
+  mutate(Total = as.numeric(gsub(",","",Total)))|> 
+  mutate(Percentage = as.numeric(gsub("%","",Percentage)))
+  
+summary(fred_table)
+
+# Step 5: Make table
+fred_table |>
+  ggplot() +
+  geom_bar(aes(x = reorder(Name, Percentage), 
+               weight = Percentage)) +
+  coord_flip() +
+  theme_economist_white() +
+  labs(
+    title="Close Margins for MD Board of Ed",
+    x = "Candidates",
+    y = "% voteshare",
+    subtitle = "Top Three Candidates Win",
+    caption = "source: Maryland State Board of Elections"
+  )
 ```
 
-**Q2** Next, let's scrape the list of press releases from Maryland's Office of the Public Defender, <https://www.opd.state.md.us/press-releases>. This isn't a table, so you'll need to use `html_elements()` and your browser's inspector and do some clean up on the results. The result should be a dataframe with three columns: title, url and date. HINT: you can extract the date from the title using lubridate OR you can use the `separate` function.
+**Q2** Next, let's scrape the list of press releases from Maryland's Office of the Public Defender, <https://osp.maryland.gov/category/press-releases/>. This isn't a table, so you'll need to use `html_elements()` and your browser's inspector and do some clean up on the results. The result should be a dataframe with three columns: title, url and date. HINT: you can extract the date from the title using lubridate OR you can use the `separate` function.
 
 You should have 10 releases when finished, not 20.
 
 Then, write code that finds the most recent release with the word "Campaign" in the title. What election does it refer to?
 
 **A2** 
-
+MD 2022 governor's race, but published in 2024
 ```{r}
+# Step 1: save url
+press_url <- "https://osp.maryland.gov/category/press-releases"
 
+# Step 2: save html + scrape
+press_html <- press_url |>
+  read_html()
+press_html
+
+# Step 3: Extract info
+releases <- press_html |>  # not LI under UL, A under Articles
+  html_elements("article a") 
+view(releases)
+
+
+# Step 4: Clean data
+releases_with_urls <- tibble(
+  title = releases %>% 
+    html_attr("title"),
+  url = releases %>% 
+    html_attr("href")) |> 
+  na.omit() |> 
+    mutate (date = mdy(title),
+            title = (gsub("Permanent Link to ","", title)),
+            title = gsub(".*:","",title))
+
+
+# Step 5: Most recent release with campaign in title
+releases_with_urls |> 
+  filter(str_detect(title, "Campaign")) 
 ```
 
 **Q3** Sen. Ben Cardin, D-Maryland, has posted hundreds of press releases at <https://www.cardin.senate.gov/?post_type=press-releases>. It would be great to have all of them in a dataframe that has the following columns: date, title and url.
@@ -57,8 +128,45 @@ When you're done, rename the columns so they make sense, then make sure the date
 Finally, tell me what questions you could ask of this data, and what other information about it would be useful to have. Be creative.
 
 **A3** 
+* How often does Cardin release press statements?
+* Does frequency of press releases change in election years? 
+* What are the most frequent topics/words in these releases?
+This data could benefit from a variable regarding the general scope/topic (MD, Senate, Letter/statement, etc). It would also be useful to see a quantitative level of media coverage for each press release. This could be in shares/likes on social media, or amount of tv coverage.
 
 ```{r}
+# Step 1: save url
+cardin_url <- "https://www.cardin.senate.gov/?post_type=press-releases"
 
+# Step 2: save html + scrape
+cardin_html <- cardin_url |>
+  read_html()
+cardin_html
+
+# Step 3: Extract info
+c_releases <- cardin_html |> 
+  html_elements("article h3 a") 
+
+c_releases2 <- cardin_html |>
+  html_elements("article") # played around and saw I got dates when just listing article
+
+# Step 4: create DF from html data
+c_urls <- tibble(
+  title = c_releases |> 
+    html_text(trim = TRUE))
+
+c_titles <- tibble(
+  url = c_releases %>% 
+    html_attr("href"))
+
+c_date <- tibble(
+  date = c_releases2 |> 
+    html_text(trim = TRUE)
+) |> 
+  mutate(date = str_sub(date, start = 1, end = 12))
+
+# step 5: Bind columns together into one dataset
+cardin <- bind_cols(c_titles,c_date, c_urls)
+
+view(cardin)
 ```
 
