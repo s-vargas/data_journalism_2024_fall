@@ -1,0 +1,115 @@
+---
+title: "Data_Analysis_Project"
+author: "Isabelle Jensen, Sonia Vargas"
+date: "11/16/24"
+output:
+  html_document:
+    theme: cerulean
+    highlight: pygments
+    toc: true
+    toc_float:
+      collapsed: true
+      smooth_scroll: false
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+This project explores cast vote records (CVRs) from the Maryland 2024 primary elections to uncover trends, patterns, and insights into voter behavior. By examining these detailed voting records, we aim to answer several newsworthy questions about the electoral process, such as straight-ticket voting rates, undervoting in down-ballot races, and the influence of ballot styles on voter choices.
+
+## Load libraries
+
+Loading required libraries for this analysis.
+
+```{r echo=FALSE, message=FALSE}
+library(tidyverse)
+library(janitor)
+library(lubridate)
+library(dplyr)
+library(readxl)
+```
+
+## Load and Cleaning Data
+
+In this section, describe the source of the data, write a basic data dictionary 
+for data you are working with, and discuss any caveats or issues you discovered 
+working with this data. 
+
+This data is pretty huge, but this is a collection of all of the data if we were to want to load all of them.
+
+```{r}
+Alleghany <- read_excel("data/01_Allegany PP24 CVRs/01PP24_Prov_CVR_SBE.xlsx") |> 
+  mutate(County = "Alleghany")
+AnneArundel <- read_excel("data/02_Anne Arundel PP24 CVRs/02PP24_Prov_CVR_SBE.xlsx") |> 
+  mutate(County = "Anne Arundel")
+BaltimoreCity <- read_excel("data/03_Baltimore City PP24 CVRs/03PP24_Prov_CVR_SBE.xlsx") |>   mutate(County = "Baltimore City")
+BaltimoreCounty <- read_excel("data/04_Baltimore County PP24 CVRs/04PP24_Prov_CVR_SBE.xlsx") |> 
+  mutate(County = "Baltimore County")
+Calvert <- read_excel("data/05_Calvert PP24 CVRs/05PP24_Prov_CVR_SBE.xlsx") |> 
+  mutate(County = "Calvert")
+Caroline <- read_excel("data/06_Caroline PP24 CVRs/06PP24_Prov_CVR_SBE.xlsx") |> 
+  mutate(County = "Caroline")
+Carroll <- read_excel("data/07_Carroll PP24 CVRs/07PP24_Prov_CVR_SBE.xlsx") |> 
+  mutate(County = "Carroll")
+Cecil <- read_excel("data/08_Cecil PP24 CVRs/08PP24_Prov_CVR_SBE.xlsx") |> 
+  mutate(County = "Cecil")
+Charles <- read_excel("data/09_Charles PP24 CVRs/09PP24_Prov_CVR_SBE.xlsx") |> 
+  mutate(County = "Charles")
+Dorchester <- read_excel("data/10_Dorchester PP24 CVRs/10PP24_Prov_CVR_SBE.xlsx") |> 
+  mutate(County = "Dorchester")
+Frederick <- read_excel("data/11_Frederick PP24 CVRs/11PP24_Prov_CVR_SBE.xlsx") |> 
+  mutate(County = "Frederick")
+Garrett <- read_excel("data/12_Garrett PP24 CVRs/12PP24_Prov_CVR_SBE.xlsx") |> 
+  mutate(County = "Garrett")
+Harford <- read_excel("data/13_Harford PP24 CVRs/13PP24_Prov_CVR_SBE.xlsx") |> 
+  mutate(County = "Harford")
+Howard <- read_excel("data/14_Howard PP24 CVRs/14PP24_Prov_CVR_SBE.xlsx") |> 
+  mutate(County = "Howard")
+Kent <- read_excel("data/15_Kent PP24 CVRs/15PP24_Prov_CVR_SBE.xlsx") |> 
+  mutate(County = "Kent")
+Montgomery <- read_excel("data/16_Montgomery PP24 CVRs/16PP24_Prov_CVR_SBE.xlsx") |> 
+  mutate(County = "Montgomery")
+PG <- read_excel("data/17_Prince George's PP24 CVRs/17PP24_Prov_CVR_SBE.xlsx") |>
+  mutate(County = "Prince George's")
+QueenAnnes <- read_excel("data/18_Queen Annes PP24 CVRs/18PP24_Prov_CVR_SBE.xlsx") |>
+  mutate(County = "Queen Anne's")
+StMarys <- read_excel("data/19_St Marys PP24 CVRs/19PP24_Prov_CVR_SBE.xlsx") |> 
+  mutate(County = "St Marys")
+Somerset <- read_excel("data/20_Somerset PP24 CVRs/20PP24_Prov_CVR_SBE.xlsx") |> 
+  mutate(County = "Somerset")
+Talbot <- read_excel("data/21_Talbot PP24 CVRs/21PP24_Prov_CVR_SBE.xlsx") |> 
+  mutate(County = "Talbot")
+Washington <- read_excel("data/22_Washington PP24 CVRs/22PP24_Prov_CVR_SBE.xlsx") |> 
+  mutate(County = "Washington")
+Wicomico <- read_excel("data/23_Wicomico PP24 CVRs/23PP24_Prov_CVR_SBE.xlsx") |> 
+  mutate(County = "Wicomico")
+Worcester <- read_excel("data/24_Worcester PP24 CVRs/24PP24_Prov_CVR_SBE.xlsx") |> 
+  mutate(County = "Worcester")
+  
+```
+
+## Questions to explore
+1. What is the proportion of Straight-Ticket Voting?
+2. What are the Undervoting Rates in Down-Ballot Races?
+3. Are there certain Precincts that behave similarly due to some aspects?
+4. How much Ballot Splitting can we see in the cast vote records?
+5. What is the Impact of Ballot Style on Voting Patterns in Local Races?
+
+## Deliverable 2 (week 12) - 10 percent: 
+For a quick overlook of a few interesting counties in MD: 
+* Alleghany county has 10,596 observations of 22 vars, 
+* Baltimore City has 98,232 obsercations of 78 vars,
+* Frederick County has 50,434 observations of 27 vars
+* Howard County has 64,723 observations of 29 vars
+* MoCo has 99,999 observations of 72 vars
+* PG county has 99,999 observations of 76 vars
+* Talbot county has 7,932 observations of 23 vars
+
+It looks like the more rural/red(?) counties have less on their ballots and Cast Vote records. It seems like there were places with more seats on their ballots. 
+One thing about this data is that there is so much of it for each county, especially
+those that are more populated. To analyze our questions we would likely have to select
+just a few counties for our analysis for sake of time and computing power. 
+For Codes or definitions, everything seems to be straightforward, and races we are
+unfamiliar with could be researched. We will probably work off of state-wide races like the Senate race and try to answer our questions based on what we have. 
