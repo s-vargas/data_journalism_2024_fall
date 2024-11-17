@@ -41,3 +41,4 @@ vignettes/*.pdf
 # DS Store
 .DS_Store
 *.DS_Store
+/major_assignments/data_analysis/2024 Presidential Primary CVRs
