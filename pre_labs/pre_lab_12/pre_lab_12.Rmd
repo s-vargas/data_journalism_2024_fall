@@ -29,6 +29,7 @@ library(tidyverse)
 library(tidytext)
 library(janitor)
 library(lubridate)
+library(rvest)
 ```
 
 Remember the end of the previous lab, where you scraped all of those press release links from Maryland Sen. Ben Cardin's website? We're going to take that one step further and analyze the actual text of those releases using tidytext. Our starting question: what words or phrases appear most in Cardin's press releases?
@@ -40,7 +41,7 @@ Let's read in this data and examine it:
 ### Task 2: Read in data
 
 **Task** Run the following code and describe the dataframe it outputs. **Answer**
-
+999 observations of 4 variables. Most recent 999 releases with date, url, title, and text. 
 ```{r}
 releases <- read_rds("data/cardin_releases.rds")
 ```
@@ -62,7 +63,8 @@ for (u in urls){
   # wait a fraction of a second so we don't hammer the server
   Sys.sleep(0.2)
   # read in the html from the url
-  html <- u |> read_html()
+  html <- u |> 
+    read_html()
   # use the xpath of the text of the release to grab it and call html_text() on it
   text <- html |> 
     html_element(xpath="/html/body/div/div/div/div/div/div/div[2]/div[1]/div/div[4]") |> 
@@ -90,7 +92,7 @@ If you are trying to create a list of unique words, R will treat differences in 
 ### Task 5: Trying out unique
 
 **Task** Run the following code and describe what the `unique` function does to the original list of words. **Answer**
-
+Unique shows us each word that is used, and lists them once each. 
 ```{r}
 a_list_of_words <- c("Dog", "dog", "dog", "cat", "cat", ",")
 unique(a_list_of_words)
@@ -101,7 +103,7 @@ Fortunately, this is a solved problem with tidytext, which has a function called
 ### Task 6: Trying out unnest_tokens
 
 **Task** Run the following code and describe the output of using the `unnest_tokens` function. **Answer**
-
+The output is a 1 variable dataset of 677,425 words used across the texts. 
 ```{r}
 unique_words <- releases |> select(text) |>
   unnest_tokens(word, text)
@@ -111,7 +113,7 @@ View(unique_words)
 ### Task 7: Make a column chart
 
 **Task** Run the following code and describe what the resulting graphic shows. Is it interesting? **Answer**
-
+This isn't interesting! A lot of parts of speech that are simple articles of a sentence. 
 Now we can look at the top words in this dataset. Let's limit ourselves to making a plot of the top 25 words, and we'll use the function `count` to do the counting:
 
 ```{r}
@@ -162,7 +164,7 @@ From there, we can get a simple word frequency by just grouping them together an
 ### Task 9: Using anti_join
 
 **Task** Run the following code and describe the results. Is it more interesting than before? **Answer**
-
+Definitely more interesting than before, we see words that conern people and policy more now. 
 ```{r}
 unique_words |>
   anti_join(stop_words) |>
@@ -195,7 +197,9 @@ Then we can create top 10 lists for both of them and compare:
 ### Task 11: Create dataframes with the top 10 words in each year
 
 **Task** Run the following code and describe the results. **Answer**
-
+Things like health and baltimore were flipped, and health was a lot less discussed. 
+This would make sense due to something like the destruction of the Key bridge and 
+subsequent federal/state support that were needed.
 ```{r}
 unique_words_2022 |>
   anti_join(stop_words) |>
@@ -233,7 +237,9 @@ So this block is is going to do the following:
 ### Task 12: Create a dataframe with the top 10 two-word phrases for 2022
 
 **Task** Run the following code and describe the results. **Answer**
-
+We see some policy related terms and community/geography related terms. This shows
+us what certain focuses may come up a lot. We see health care, Prince George's, 
+location Baltimore, covid 19, human rights. 
 ```{r}
 releases |>
   filter(year(date) == 2022) |>
@@ -253,7 +259,8 @@ And we already have a different, more nuanced result. Health was among the top s
 ### Task 13: Create a dataframe with the top 10 two-word phrases for 2024
 
 **Task** Run the following code and describe the results. **Answer**
-
+This looks similar to the list above, with covid gone.
+The list is primarily terms around place, money, and policy. 
 ```{r}
 releases |>
   filter(year(date) == 2024) |>
@@ -279,7 +286,7 @@ Or..... we could have R tackle this.
 **Task** Run the following code.
 
 ```{r}
-install.packages("pacman") # comment this line out after you run it the first time
+# install.packages("pacman") # comment this line out after you run it the first time
 pacman::p_load_gh("trinker/textstem")
 library(textstem)
 ```
@@ -289,14 +296,15 @@ library(textstem)
 ### Task 15: Stemming vs. Lemmatization
 
 **Task** Run the following code and describe the differences between the two results. Which one might be more useful for the press release data? **Answer**
-
+For the press release data we may prefer the lemmatized words, since its able to 
+create a smaller dictionary of unique words than stem is. This helps to get to the true 
+content words that we want to analyze. 
 ```{r}
 dw <- c('driver', 'drive', 'drove', 'driven', 'drives', 'driving')
 
 stem_words(dw)
 
 lemmatize_words(dw)
-
 ```
 
 Let's try lemmatization on the 2024 unique words, and then compare the top ten to the original top ten from Task 11:
@@ -304,7 +312,9 @@ Let's try lemmatization on the 2024 unique words, and then compare the top ten t
 ### Task 16: Lemmatization vs. Words
 
 **Task** Run the following code and describe the differences between the two results. Which one is more useful? **Answer**
-
+The lemmatized data is more useful, as it was successfully able to group words together
+such as "funding" and "funds". This lets us group that topic together and more 
+accurately represent the data in the table. 
 ```{r}
 unique_words_2024_lemma <- lemmatize_words(unique_words_2024$word) |> as_tibble() |> rename(word = value)
 
@@ -330,7 +340,9 @@ Another popular use of text analysis is to measure the sentiment of a word - whe
 ### Task 17: Load the bing lexicon and produce sentiments for our 2022 and 2024 unique words
 
 **Task** Run the following code and describe the results. Do any of the sentiments seem incorrect or counter-intuitive? **Answer**
-
+This is interesting, as the amount of times that support was mentioned was less in 2024
+than in 2022. The number one spot still has a significantly larger n than the second spot.
+The sentiment analysis seems pretty accurate. 
 ```{r}
 bing <- get_sentiments("bing")
 
