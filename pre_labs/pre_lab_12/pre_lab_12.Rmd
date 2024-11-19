@@ -340,9 +340,9 @@ Another popular use of text analysis is to measure the sentiment of a word - whe
 ### Task 17: Load the bing lexicon and produce sentiments for our 2022 and 2024 unique words
 
 **Task** Run the following code and describe the results. Do any of the sentiments seem incorrect or counter-intuitive? **Answer**
-This is interesting, as the amount of times that support was mentioned was less in 2024
-than in 2022. The number one spot still has a significantly larger n than the second spot.
-The sentiment analysis seems pretty accurate. 
+The sentiment analysis seems pretty accurate. We do have concerns with words like "work", 
+"well", "critical" for issues around context in the actual release could be 
+different than the sentiment analyzed.  
 ```{r}
 bing <- get_sentiments("bing")
 
