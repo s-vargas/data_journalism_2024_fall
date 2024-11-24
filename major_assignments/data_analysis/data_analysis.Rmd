@@ -134,7 +134,7 @@ table(Frederick$not_split)
 # 34949 not split
 # 15485 split from party candidates
 
-Frederickn_Rep <- Frederick |> 
+Frederick_Rep <- Frederick |> 
   filter(str_detect(`Ballot Style`, "Rep"))
 table(Frederick_Rep$not_split)
 # 9127 Republicans split
@@ -219,4 +219,461 @@ table(AnneArundel_Rep$not_split)
 3903/(3903+31555)*100 # 11% Rep did not split
 # 31555 Republicans did split
 ```
+
+ndervote Coding
+
+Montgomery
+
+```{r}
+Montgomery |>
+  filter(
+    `DEM President of the United States (4) (500001630104)` == "undervote" |
+    `DEM President of the United States (6) (500001630106)` == "undervote" |
+    `DEM President of the United States (8) (500001630108)` == "undervote"
+  ) |>
+  summarize(
+    `Race 4` = sum(`DEM President of the United States (4) (500001630104)` == "undervote", na.rm = TRUE),
+    `Race 6` = sum(`DEM President of the United States (6) (500001630106)` == "undervote", na.rm = TRUE),
+    `Race 8` = sum(`DEM President of the United States (8) (500001630108)` == "undervote", na.rm = TRUE)
+  )
+5 +	61+	269	
+#335 undervotes for president
+
+Montgomery |>
+  summarize(
+    `Total DEM (4)` = sum(!is.na(`DEM President of the United States (4) (500001630104)`)),
+    `Total DEM (6)` = sum(!is.na(`DEM President of the United States (6) (500001630106)`)),
+    `Total DEM (8)` = sum(!is.na(`DEM President of the United States (8) (500001630108)`))
+  )
+2329 + 12548 + 62687
+#77564
+
+335/77564
+#0.4% of all democratic presidential votes were undervotes
+
+
+Montgomery |>
+  filter(
+    `REP President of the United States (4) (500001630204)` == "undervote" |
+    `REP President of the United States (6) (500001630206)` == "undervote" |
+    `REP President of the United States (8) (500001630208)` == "undervote"
+  ) |>
+  summarize(
+    `REP Race 4` = sum(`REP President of the United States (4) (500001630204)` == "undervote", na.rm = TRUE),
+    `REP Race 6` = sum(`REP President of the United States (6) (500001630206)` == "undervote", na.rm = TRUE),
+    `REP Race 8` = sum(`REP President of the United States (8) (500001630208)` == "undervote", na.rm = TRUE),
+    `Total REP (4)` = sum(!is.na(`REP President of the United States (4) (500001630204)`)),
+    `Total REP (6)` = sum(!is.na(`REP President of the United States (6) (500001630206)`)),
+    `Total REP (8)` = sum(!is.na(`REP President of the United States (8) (500001630208)`)))
+# JUST undervotes:
+13	+ 0 +	348
+# 361 undervotes for Rep pres
+# TOTAL REP votes:
+435 + 0 + 11988
+# % undervote REP:
+361/12423
+# 2.9% undervotes for Rep president out of total votes
+
+Montgomery |>
+  filter(
+    `DEM U.S. Senator (5000017641)` == "undervote" )|>
+  summarize(
+    Total = sum(`DEM U.S. Senator (5000017641)`  == "undervote", na.rm = TRUE),
+  )
+# 897 senate dem undervotes
+
+Montgomery |>
+  summarize(
+    totalvotes=sum(!is.na(`DEM U.S. Senator (5000017641)` )))
+# Total senate dem votes 77564	
+
+897/77564	
+# 1.2% undervote
+
+
+Montgomery |>
+  filter(
+    `REP U.S. Senator (5000017642)` == "undervote" )|>
+  summarize(
+    Total = sum(`REP U.S. Senator (5000017642)`  == "undervote", na.rm = TRUE),
+  )
+#306 senate rep undervotes
+
+Montgomery |>
+  summarize(
+    totalvotes=sum(!is.na(`REP U.S. Senator (5000017642)` )))
+#Total senate rep votes 16976		
+
+306/16976
+#1.8% of all senate rep votes were undervotes
+```
+
+Undervote Howard
+
+```{r}
+Howard |>
+  filter(
+    `DEM President of the United States (3) (500001630103)`  == "undervote" ) |>
+  summarize(
+    Count = sum(`DEM President of the United States (3) (500001630103)`  == "undervote", na.rm = TRUE)
+  )
+# 231 undervotes for president
+
+Howard |>
+  summarize(
+    Count = sum(!is.na( `DEM President of the United States (3) (500001630103)`))
+  )
+# 44726	total dem pres votes
+
+231/44726
+# 0.5% of all democratic presidential votes were undervotes
+
+
+Howard |>
+  filter(
+    `REP President of the United States (3) (500001630203)`   == "undervote" ) |>
+  summarize(
+    Count = sum(`REP President of the United States (3) (500001630203)`   == "undervote", na.rm = TRUE)
+  )
+# 512 undervotes for president
+
+Howard |>
+  summarize(
+    Count = sum(!is.na(  `REP President of the United States (3) (500001630203)` ))
+  )
+# 15901
+
+512/15901
+# 3.2% undervote for president rep candidates
+
+Howard |>
+  filter(
+   `DEM U.S. Senator (5000017641)`  == "undervote" ) |>
+  summarize(
+    Count = sum(`DEM U.S. Senator (5000017641)`  == "undervote", na.rm = TRUE)
+  )
+# 967 undervotes for senate
+
+Howard |>
+  summarize(
+    Count = sum(!is.na( `DEM U.S. Senator (5000017641)`))
+  )
+# 44726	
+
+927/44726
+# 2.1% undervote democrate senate race
+
+
+Howard |>
+  filter(
+   `REP U.S. Senator (5000017642)`  == "undervote" ) |>
+  summarize(
+    Count = sum(`REP U.S. Senator (5000017642)`  == "undervote", na.rm = TRUE)
+  )
+# 261 undervotes for senate
+
+Howard |>
+  summarize(
+    Count = sum(!is.na( `REP U.S. Senator (5000017642)`))
+  )
+# 15901		
+
+261/15901
+# 1.6% undervotes for rep senate
+```
+
+
+Frederick Undervotes
+```{r}
+Frederick |>
+  filter(
+    `DEM President of the United States (6) (500001630106)`   == "undervote" ) |>
+  summarize(
+    Count = sum( `DEM President of the United States (6) (500001630106)`   == "undervote", na.rm = TRUE)
+  )
+# 168 undervotes for president
+
+Frederick |>
+  summarize(
+    Count = sum(!is.na(  `DEM President of the United States (6) (500001630106)` ))
+  )
+# 25772	total dem pres votes
+
+168/25772
+# 0.6% of all democratic presidential votes were undervotes
+
+
+Frederick |>
+  filter(
+   `REP President of the United States (6) (500001630206)`    == "undervote" ) |>
+  summarize(
+    Count = sum( `REP President of the United States (6) (500001630206)`    == "undervote", na.rm = TRUE)
+  )
+# 491 undervotes for president
+
+Frederick |>
+  summarize(
+    Count = sum(!is.na(  `REP President of the United States (6) (500001630206)`  ))
+  )
+# 20457		total rep pres votes
+
+491/20457
+# 2.4% of all republican presidential votes were undervotes
+
+
+Frederick |>
+  filter(
+   `DEM U.S. Senator (5000017641)`   == "undervote" ) |>
+  summarize(
+    Count = sum( `DEM U.S. Senator (5000017641)`    == "undervote", na.rm = TRUE)
+  )
+# 471 undervotes for senates
+
+Frederick |>
+  summarize(
+    Count = sum(!is.na(  `DEM U.S. Senator (5000017641)`  ))
+  )
+# 25772	total dem senate votes
+
+471/25772
+# 1.8% of all democratic senate votes were undervotes
+
+Frederick |>
+  filter(
+   `REP U.S. Senator (5000017642)`      == "undervote" ) |>
+  summarize(
+    Count = sum( `REP U.S. Senator (5000017642)`      == "undervote", na.rm = TRUE)
+  )
+# 442	undervotes for senate
+
+Frederick |>
+  summarize(
+    Count = sum(!is.na( `REP U.S. Senator (5000017642)`    ))
+  )
+# 20457	total rep senate votes
+
+442/20457
+# 2.2% of all republican senate votes were undervotes
+```
+
+Baltimore City Undervotes
+```{r}
+BaltimoreCity |>
+  filter(
+    `DEM President of the United States (2) (500001630102)` == "undervote" |
+    `DEM President of the United States (7) (500001630107)`    == "undervote" ) |>
+  summarize(
+    `Race 2` = sum( `DEM President of the United States (2) (500001630102)` == "undervote", na.rm = TRUE),
+    `Race 7` = sum( `DEM President of the United States (7) (500001630107)`  == "undervote", na.rm = TRUE)
+  )
+57+	1146	
+# 1203 undervotes for dem president
+
+BaltimoreCity |>
+  summarize(
+    `Total DEM (2)` = sum(!is.na(`DEM President of the United States (2) (500001630102)`)),
+    `Total DEM (7)` = sum(!is.na(`DEM President of the United States (7) (500001630107)` ))
+  )
+8430+	85254
+# 93684
+
+1203/93684
+# 1.3% of all democratic presidential votes were undervotes
+
+BaltimoreCity |>
+  filter(
+   `REP President of the United States (2) (500001630202)` == "undervote" |
+    `REP President of the United States (7) (500001630207)`    == "undervote" ) |>
+  summarize(
+    `Race 2` = sum( `REP President of the United States (2) (500001630202)` == "undervote", na.rm = TRUE),
+    `Race 7` = sum( `REP President of the United States (7) (500001630207)`  == "undervote", na.rm = TRUE)
+  )
+0	+175		
+# 175 undervotes for rep president
+
+BaltimoreCity |>
+  summarize(
+    `Total DEM (2)` = sum(!is.na(`REP President of the United States (2) (500001630202)`)),
+    `Total DEM (7)` = sum(!is.na(`REP President of the United States (7) (500001630207)` ))
+  )
+0	+ 4090
+
+# 4090
+175/4090
+# 4.3% of all republican presidential votes were undervotes
+
+BaltimoreCity |>
+  filter(
+  `DEM U.S. Senator (5000017641)`   == "undervote" ) |>
+  summarize(
+    Count = sum( `DEM U.S. Senator (5000017641)`    == "undervote", na.rm = TRUE)
+  )
+# 3088 undervotes for senates
+
+BaltimoreCity |>
+  summarize(
+    Count = sum(!is.na( `DEM U.S. Senator (5000017641)`  ))
+  )
+# 93684	total dem senate votes
+
+3088/93684
+# 3.3% of all democratic senate votes were undervotes
+
+
+BaltimoreCity |>
+  filter(
+  `REP U.S. Senator (5000017642)`  == "undervote" ) |>
+  summarize(
+    Count = sum( `REP U.S. Senator (5000017642)`   == "undervote", na.rm = TRUE)
+  )
+# 157 undervotes for rep senate
+
+BaltimoreCity |>
+  summarize(
+    Count = sum(!is.na( `REP U.S. Senator (5000017642)` ))
+  )
+# 4548		total rep senate votes
+
+157/4548
+# 3.5% of all republican senate votes were undervotes
+```
+
+
+
+
+Undervotes Baltimore County
+```{r}
+BaltimoreCounty |>
+  filter(
+    `DEM President of the United States (1) (500001630101)` == "undervote" |
+   `DEM President of the United States (2) (500001630102)`  == "undervote" |
+   `DEM President of the United States (7) (500001630107)`   == "undervote"
+  ) |>
+  summarize(
+    `Race 1` = sum( `DEM President of the United States (1) (500001630101)` == "undervote", na.rm = TRUE),
+    `Race 2` = sum( `DEM President of the United States (2) (500001630102)` == "undervote", na.rm = TRUE),
+    `Race 7` = sum(`DEM President of the United States (7) (500001630107)` == "undervote", na.rm = TRUE)
+  )
+18 +	243 +	70	
+# 331 undervotes for president
+
+BaltimoreCounty |>
+  summarize(
+    `Total DEM (1)` = sum(!is.na(`DEM President of the United States (1) (500001630101)`)),
+    `Total DEM (2)` = sum(!is.na(`DEM President of the United States (2) (500001630102)`)),
+    `Total DEM (7)` = sum(!is.na(`DEM President of the United States (7) (500001630107)`))
+  )
+3565	+ 48222	+ 15297
+# 67084
+
+331/67084
+# 0.5 percent of all dem votes for president were undervotes
+
+BaltimoreCounty |>
+  filter(
+   `REP President of the United States (1) (500001630201)`  == "undervote" |
+  `REP President of the United States (2) (500001630202)`    == "undervote" |
+   `REP President of the United States (7) (500001630207)`      == "undervote"
+  ) |>
+  summarize(
+    `Race 1` = sum( `REP President of the United States (1) (500001630201)`  == "undervote", na.rm = TRUE),
+    `Race 2` = sum( `REP President of the United States (2) (500001630202)`   == "undervote", na.rm = TRUE),
+    `Race 7` = sum(`REP President of the United States (7) (500001630207)`    == "undervote", na.rm = TRUE)
+  )
+0+	471	+72	
+# 543 undervotes for president
+
+BaltimoreCounty |>
+  summarize(
+    `Total rep (1)` = sum(!is.na(`REP President of the United States (1) (500001630201)` )),
+    `Total rep (2)` = sum(!is.na(`REP President of the United States (2) (500001630202)`  )),
+    `Total rep (7)` = sum(!is.na(`REP President of the United States (7) (500001630207)` ))
+  )
+
+0	+ 21924 + 5837
+# 27761
+
+543/27761
+# 2% of all votes for rep president was an undervote
+
+BaltimoreCounty |>
+  filter(
+  `DEM U.S. Senator (5000017641)`    == "undervote" ) |>
+  summarize(
+    Count = sum( `DEM U.S. Senator (5000017641)`    == "undervote", na.rm = TRUE)
+  )
+# 1107 undervotes for senates
+
+BaltimoreCounty |>
+  summarize(
+    Count = sum(!is.na( `DEM U.S. Senator (5000017641)`   ))
+  )
+# 67084	total dem senate votes
+
+1107/67084
+# 1.7% of all democratic senate votes were undervotes
+
+BaltimoreCounty |>
+  filter(
+  `REP U.S. Senator (5000017642)`  == "undervote" ) |>
+  summarize(
+    Count = sum( `REP U.S. Senator (5000017642)`  == "undervote", na.rm = TRUE)
+  )
+# 530 undervotes for rep senate
+
+BaltimoreCounty |>
+  summarize(
+    Count = sum(!is.na( `REP U.S. Senator (5000017642)`))
+  )
+# 32915	total rep senate votes
+
+530/32915
+# 1.6% of all republican senate votes were undervotes
+```
+
+
+Results of undervotes for each race and county
+Montgomery County
+President
+dem 0.4%
+rep 2.9%
+senate
+dem 1.2%
+rep 1.8%
+
+
+Howard County
+President
+dem 0.5%
+rep 3.2%
+senate
+dem 2.1%
+rep 1.6%
+
+Frederick County
+President
+dem 0.6%
+rep 2.4%
+senate
+dem 1.8%
+rep 2.2%
+
+Baltimore City
+President
+dem 1.3%
+rep 4.3%
+senate
+dem 3.3%
+rep 3.5%
+
+
+Baltimore County
+President
+dem 0.5%
+rep 2.0%
+senate
+dem 1.7%
+rep 1.6%
+
+Across the 5 counties Republicans had a higher undervote percentage with the average being 2.3% higher than Democrats. Republicans undervoted more than Democrats for Senate but the difference is much smaller (an average of 0.12%) This might show that Republicans in Maryland are less happy with their options for president in the primary than Democrats were. 
 
