@@ -113,3 +113,110 @@ those that are more populated. To analyze our questions we would likely have to 
 just a few counties for our analysis for sake of time and computing power. 
 For Codes or definitions, everything seems to be straightforward, and races we are
 unfamiliar with could be researched. We will probably work off of state-wide races like the Senate race and try to answer our questions based on what we have. 
+
+* Since a lot of these school boards are non partisan for the most part, we are going
+to observe the split ticketing of Republican candidates voting for or against 1776 candidates
+as discussed in (this article)[https://cnsmaryland.org/2024/11/08/md-conservatives-make-gains-in-school-board-races/] and researched by us. 
+```{r School Board Split Tickets}
+#### Frederick #### 
+table(Frederick$`Board of Education (50000167144)`)
+# "Democrat" endorsed candidates: Bokee, Lowe, Monier, King Wilson Sr
+# 1776 supported candidates: Colt Morningstar Black, Jaime Kiersten Brennan
+# (source)[https://www.frederickdemocrats.org/md-voting/upcoming-elections/board-education]
+Frederick <- Frederick |> 
+  mutate(REP_BOE = case_when(
+    `Board of Education (50000167144)` == "Colt Morningstar Black (10022022.0000302)" ~ "REP",
+    `Board of Education (50000167144)` == "Jaime Kiersten Brennan (10022022.0000119)" ~ "REP",
+    TRUE ~ "Other"
+  ),
+  not_split = ifelse(str_detect(`Ballot Style`, "Rep") & REP_BOE == "REP" | str_detect(`Ballot Style`, "Dem") & REP_BOE != "REP" , 1 , 0)) # if they are REP and voted for one of the 1776 ed candidates OR Dem and did NOT vote for one of the 1776 candidates, they did NOT split their PRIMARY ballot
+table(Frederick$not_split) 
+# 34949 not split
+# 15485 split from party candidates
+
+Frederickn_Rep <- Frederick |> 
+  filter(str_detect(`Ballot Style`, "Rep"))
+table(Frederick_Rep$not_split)
+# 9127 Republicans split
+# 11330 republicans did not split (voted for 1776 candidates)
+11330/(11330+9127)*100 # 55% did not split
+
+#### Washington #### 
+table(Washington$`Board of Education (50000167344)`)
+# 1776 candidates: Charles A. Burkett, Ashley McCusker, Victoria Beachley, April Ann Zentmeyer*
+# "Dem" endorsed Candidates: Pieter Bickford, Stan Stouffer, Robin Merchant Spickler, Melissa Williams
+# (source)[https://bluevoterguide.org/district/MD/Washington_County/21474/169]
+Washington <- Washington |> 
+  mutate(REP_BOE = case_when(
+    `Board of Education (50000167344)` == "Charles A. Burkett (10031031.0000509)" ~ "REP",
+    `Board of Education (50000167344)` == "Ashley McCusker (10031031.0000542)" ~ "REP",
+    `Board of Education (50000167344)` == "Victoria Beachley (10031031.0000172)" ~ "REP",
+    `Board of Education (50000167344)` == "Melissa Williams (10031031.0000656)" ~ "REP",
+    TRUE ~ "Other"
+  ),
+  not_split = ifelse(str_detect(`Ballot Style`, "Rep") & REP_BOE == "REP" | 
+                       str_detect(`Ballot Style`, "Dem") & REP_BOE != "REP" , 1 , 0)) # if they are REP and voted for one of the 1776 ed candidates OR Dem and did NOT vote for one of the 1776 candidates, they did NOT split their PRIMARY ballot
+table(Washington$not_split) 
+# 12965 not split
+# 11545 split from party candidates
+
+Washington_Rep <- Washington |> 
+  filter(str_detect(`Ballot Style`, "Rep"))
+table(Washington_Rep$not_split)
+# 6737 Republicans did not split (voted for 1776 candidates) 
+6737/(6737+7302)*100 # 48% Rep did not split
+# 7302 Republicans did split
+
+
+# conservative candidates: Joseph Marchio, Paul Harrison, Melissa Goshorn
+#### Talbot #### 
+table(Talbot$`Board of Education (2) (50000173444)`)
+# 1776 candidates: Ann C. O'Connor, Kerry Gunshenan, Karla Wieland-Cherry
+
+Talbot <- Talbot |> 
+  mutate(REP_BOE = case_when(
+    `Board of Education (2) (50000173444)` == "Ann C. O'Connor (10122127.0000735)" ~ "REP",
+    TRUE ~ "Other"
+  ),
+  not_split = ifelse(str_detect(`Ballot Style`, "Rep") & REP_BOE == "REP" | 
+                       str_detect(`Ballot Style`, "Dem") & REP_BOE != "REP" , 1 , 0)) # if they are REP and voted for one of the 1776 ed candidates OR Dem and did NOT vote for one of the 1776 candidates, they did NOT split their PRIMARY ballot
+table(Talbot$not_split) 
+# 4077 not split
+# 3855 split from party candidates
+
+Talbot_Rep <- Talbot |> 
+  filter(str_detect(`Ballot Style`, "Rep"))
+table(Talbot_Rep$not_split)
+# 239 Republicans did not split (voted for 1776 candidates) 
+239/(239+3701)*100 # 6% Rep did not split
+# 3701 Republicans did split
+
+#### Anne Arundel #### 
+
+# Conservative, not 1776 candidates: Chuck Yocum, Latoya Nkongolo, Dawn Pullium
+# (source)[https://www.somdnews.com/news/state/conservative-pac-dems-face-off-over-maryland-school-board-races/article_084d9d36-9537-11ef-9d33-03374e9ddf74.html] 
+table(AnneArundel$`Board of Education (1) (50000176644)`)
+table(AnneArundel$`Board of Education (3) (50000173844)`) # Yocum
+table(AnneArundel$`Board of Education (4) (50000176744)`)
+table(AnneArundel$`Board of Education (5) (50000176844)`) # Latoya
+
+AnneArundel <- AnneArundel |> 
+  mutate(REP_BOE = case_when(
+    `Board of Education (3) (50000173844)` == "Chuck Yocum (10024024.0000151)" ~ "REP",
+    `Board of Education (5) (50000176844)` == "LaToya Nkongolo (10008008.0000078)" ~ "REP",
+    TRUE ~ "Other"
+  ),
+  not_split = ifelse(str_detect(`Ballot Style`, "Rep") & REP_BOE == "REP" | 
+                       str_detect(`Ballot Style`, "Dem") & REP_BOE != "REP" , 1 , 0)) # if they are REP and voted for one of the 1776 ed candidates OR Dem and did NOT vote for one of the 1776 candidates, they did NOT split their PRIMARY ballot
+table(AnneArundel$not_split) 
+# 55953 not split
+# 37613 split from party candidates
+
+AnneArundel_Rep <- AnneArundel |> 
+  filter(str_detect(`Ballot Style`, "Rep"))
+table(AnneArundel_Rep$not_split)
+# 3903 Republicans did not split (voted for 1776 candidates) 
+3903/(3903+31555)*100 # 11% Rep did not split
+# 31555 Republicans did split
+```
+
