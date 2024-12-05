@@ -1,0 +1,679 @@
+---
+title: "Data_Analysis_Project"
+author: "Isabelle Jensen, Sonia Vargas"
+date: "11/16/24"
+output:
+  html_document:
+    theme: cerulean
+    highlight: pygments
+    toc: true
+    toc_float:
+      collapsed: true
+      smooth_scroll: false
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+This project explores cast vote records (CVRs) from the Maryland 2024 primary elections to uncover trends, patterns, and insights into voter behavior. By examining these detailed voting records, we aim to answer several newsworthy questions about the electoral process, such as straight-ticket voting rates, undervoting in down-ballot races, and the influence of ballot styles on voter choices.
+
+## Load libraries
+
+Loading required libraries for this analysis.
+
+```{r echo=FALSE, message=FALSE}
+library(tidyverse)
+library(janitor)
+library(lubridate)
+library(dplyr)
+library(readxl)
+```
+
+## Load and Cleaning Data
+
+In this section, describe the source of the data, write a basic data dictionary 
+for data you are working with, and discuss any caveats or issues you discovered 
+working with this data. 
+
+This data is pretty huge, but this is a collection of all of the data if we were to want to load all of them.
+
+```{r}
+Alleghany <- read_excel("data/01_Allegany PP24 CVRs/01PP24_Prov_CVR_SBE.xlsx") |> 
+  mutate(County = "Alleghany")
+AnneArundel <- read_excel("data/02_Anne Arundel PP24 CVRs/02PP24_Prov_CVR_SBE.xlsx") |> 
+  mutate(County = "Anne Arundel")
+BaltimoreCity <- read_excel("data/03_Baltimore City PP24 CVRs/03PP24_Prov_CVR_SBE.xlsx") |>   mutate(County = "Baltimore City")
+BaltimoreCounty <- read_excel("data/04_Baltimore County PP24 CVRs/04PP24_Prov_CVR_SBE.xlsx") |> 
+  mutate(County = "Baltimore County")
+Calvert <- read_excel("data/05_Calvert PP24 CVRs/05PP24_Prov_CVR_SBE.xlsx") |> 
+  mutate(County = "Calvert")
+Caroline <- read_excel("data/06_Caroline PP24 CVRs/06PP24_Prov_CVR_SBE.xlsx") |> 
+  mutate(County = "Caroline")
+Carroll <- read_excel("data/07_Carroll PP24 CVRs/07PP24_Prov_CVR_SBE.xlsx") |> 
+  mutate(County = "Carroll")
+Cecil <- read_excel("data/08_Cecil PP24 CVRs/08PP24_Prov_CVR_SBE.xlsx") |> 
+  mutate(County = "Cecil")
+Charles <- read_excel("data/09_Charles PP24 CVRs/09PP24_Prov_CVR_SBE.xlsx") |> 
+  mutate(County = "Charles")
+Dorchester <- read_excel("data/10_Dorchester PP24 CVRs/10PP24_Prov_CVR_SBE.xlsx") |> 
+  mutate(County = "Dorchester")
+Frederick <- read_excel("data/11_Frederick PP24 CVRs/11PP24_Prov_CVR_SBE.xlsx") |> 
+  mutate(County = "Frederick")
+Garrett <- read_excel("data/12_Garrett PP24 CVRs/12PP24_Prov_CVR_SBE.xlsx") |> 
+  mutate(County = "Garrett")
+Harford <- read_excel("data/13_Harford PP24 CVRs/13PP24_Prov_CVR_SBE.xlsx") |> 
+  mutate(County = "Harford")
+Howard <- read_excel("data/14_Howard PP24 CVRs/14PP24_Prov_CVR_SBE.xlsx") |> 
+  mutate(County = "Howard")
+Kent <- read_excel("data/15_Kent PP24 CVRs/15PP24_Prov_CVR_SBE.xlsx") |> 
+  mutate(County = "Kent")
+Montgomery <- read_excel("data/16_Montgomery PP24 CVRs/16PP24_Prov_CVR_SBE.xlsx") |> 
+  mutate(County = "Montgomery")
+PG <- read_excel("data/17_Prince George's PP24 CVRs/17PP24_Prov_CVR_SBE.xlsx") |>
+  mutate(County = "Prince George's")
+QueenAnnes <- read_excel("data/18_Queen Annes PP24 CVRs/18PP24_Prov_CVR_SBE.xlsx") |>
+  mutate(County = "Queen Anne's")
+StMarys <- read_excel("data/19_St Marys PP24 CVRs/19PP24_Prov_CVR_SBE.xlsx") |> 
+  mutate(County = "St Marys")
+Somerset <- read_excel("data/20_Somerset PP24 CVRs/20PP24_Prov_CVR_SBE.xlsx") |> 
+  mutate(County = "Somerset")
+Talbot <- read_excel("data/21_Talbot PP24 CVRs/21PP24_Prov_CVR_SBE.xlsx") |> 
+  mutate(County = "Talbot")
+Washington <- read_excel("data/22_Washington PP24 CVRs/22PP24_Prov_CVR_SBE.xlsx") |> 
+  mutate(County = "Washington")
+Wicomico <- read_excel("data/23_Wicomico PP24 CVRs/23PP24_Prov_CVR_SBE.xlsx") |> 
+  mutate(County = "Wicomico")
+Worcester <- read_excel("data/24_Worcester PP24 CVRs/24PP24_Prov_CVR_SBE.xlsx") |> 
+  mutate(County = "Worcester")
+  
+```
+
+## Questions to explore
+1. What is the proportion of Straight-Ticket Voting?
+2. What are the Undervoting Rates in Down-Ballot Races?
+3. Are there certain Precincts that behave similarly due to some aspects?
+4. How much Ballot Splitting can we see in the cast vote records?
+5. What is the Impact of Ballot Style on Voting Patterns in Local Races?
+
+## Deliverable 2 (week 12) - 10 percent: 
+For a quick overlook of a few interesting counties in MD: 
+* Alleghany county has 10,596 observations of 22 vars, 
+* Baltimore City has 98,232 obsercations of 78 vars,
+* Frederick County has 50,434 observations of 27 vars
+* Howard County has 64,723 observations of 29 vars
+* MoCo has 99,999 observations of 72 vars
+* PG county has 99,999 observations of 76 vars
+* Talbot county has 7,932 observations of 23 vars
+
+It looks like the more rural/red(?) counties have less on their ballots and Cast Vote records. It seems like there were places with more seats on their ballots. 
+One thing about this data is that there is so much of it for each county, especially
+those that are more populated. To analyze our questions we would likely have to select
+just a few counties for our analysis for sake of time and computing power. 
+For Codes or definitions, everything seems to be straightforward, and races we are
+unfamiliar with could be researched. We will probably work off of state-wide races like the Senate race and try to answer our questions based on what we have. 
+
+* Since a lot of these school boards are non partisan for the most part, we are going
+to observe the split ticketing of Republican candidates voting for or against 1776 candidates
+as discussed in (this article)[https://cnsmaryland.org/2024/11/08/md-conservatives-make-gains-in-school-board-races/] and researched by us. 
+```{r School Board Split Tickets}
+#### Frederick #### 
+table(Frederick$`Board of Education (50000167144)`)
+# "Democrat" endorsed candidates: Bokee, Lowe, Monier, King Wilson Sr
+# 1776 supported candidates: Colt Morningstar Black, Jaime Kiersten Brennan
+# (source)[https://www.frederickdemocrats.org/md-voting/upcoming-elections/board-education]
+Frederick <- Frederick |> 
+  mutate(REP_BOE = case_when(
+    `Board of Education (50000167144)` == "Colt Morningstar Black (10022022.0000302)" ~ "REP",
+    `Board of Education (50000167144)` == "Jaime Kiersten Brennan (10022022.0000119)" ~ "REP",
+    TRUE ~ "Other"
+  ),
+  not_split = ifelse(str_detect(`Ballot Style`, "Rep") & REP_BOE == "REP" | str_detect(`Ballot Style`, "Dem") & REP_BOE != "REP" , 1 , 0)) # if they are REP and voted for one of the 1776 ed candidates OR Dem and did NOT vote for one of the 1776 candidates, they did NOT split their PRIMARY ballot
+table(Frederick$not_split) 
+# 34949 not split
+# 15485 split from party candidates
+
+Frederick_Rep <- Frederick |> 
+  filter(str_detect(`Ballot Style`, "Rep"))
+table(Frederick_Rep$not_split)
+# 9127 Republicans split
+# 11330 republicans did not split (voted for 1776 candidates)
+11330/(11330+9127)*100 # 55% did not split
+
+#### Washington #### 
+table(Washington$`Board of Education (50000167344)`)
+# 1776 candidates: Charles A. Burkett, Ashley McCusker, Victoria Beachley, April Ann Zentmeyer*
+# "Dem" endorsed Candidates: Pieter Bickford, Stan Stouffer, Robin Merchant Spickler, Melissa Williams
+# (source)[https://bluevoterguide.org/district/MD/Washington_County/21474/169]
+Washington <- Washington |> 
+  mutate(REP_BOE = case_when(
+    `Board of Education (50000167344)` == "Charles A. Burkett (10031031.0000509)" ~ "REP",
+    `Board of Education (50000167344)` == "Ashley McCusker (10031031.0000542)" ~ "REP",
+    `Board of Education (50000167344)` == "Victoria Beachley (10031031.0000172)" ~ "REP",
+    `Board of Education (50000167344)` == "Melissa Williams (10031031.0000656)" ~ "REP",
+    TRUE ~ "Other"
+  ),
+  not_split = ifelse(str_detect(`Ballot Style`, "Rep") & REP_BOE == "REP" | 
+                       str_detect(`Ballot Style`, "Dem") & REP_BOE != "REP" , 1 , 0)) # if they are REP and voted for one of the 1776 ed candidates OR Dem and did NOT vote for one of the 1776 candidates, they did NOT split their PRIMARY ballot
+table(Washington$not_split) 
+# 12965 not split
+# 11545 split from party candidates
+
+Washington_Rep <- Washington |> 
+  filter(str_detect(`Ballot Style`, "Rep"))
+table(Washington_Rep$not_split)
+# 6737 Republicans did not split (voted for 1776 candidates) 
+6737/(6737+7302)*100 # 48% Rep did not split
+# 7302 Republicans did split
+
+
+# conservative candidates: Joseph Marchio, Paul Harrison, Melissa Goshorn
+#### Talbot #### 
+table(Talbot$`Board of Education (2) (50000173444)`)
+# 1776 candidates: Ann C. O'Connor, Kerry Gunshenan, Karla Wieland-Cherry
+
+Talbot <- Talbot |> 
+  mutate(REP_BOE = case_when(
+    `Board of Education (2) (50000173444)` == "Ann C. O'Connor (10122127.0000735)" ~ "REP",
+    TRUE ~ "Other"
+  ),
+  not_split = ifelse(str_detect(`Ballot Style`, "Rep") & REP_BOE == "REP" | 
+                       str_detect(`Ballot Style`, "Dem") & REP_BOE != "REP" , 1 , 0)) # if they are REP and voted for one of the 1776 ed candidates OR Dem and did NOT vote for one of the 1776 candidates, they did NOT split their PRIMARY ballot
+table(Talbot$not_split) 
+# 4077 not split
+# 3855 split from party candidates
+
+Talbot_Rep <- Talbot |> 
+  filter(str_detect(`Ballot Style`, "Rep"))
+table(Talbot_Rep$not_split)
+# 239 Republicans did not split (voted for 1776 candidates) 
+239/(239+3701)*100 # 6% Rep did not split
+# 3701 Republicans did split
+
+#### Anne Arundel #### 
+
+# Conservative, not 1776 candidates: Chuck Yocum, Latoya Nkongolo, Dawn Pullium
+# (source)[https://www.somdnews.com/news/state/conservative-pac-dems-face-off-over-maryland-school-board-races/article_084d9d36-9537-11ef-9d33-03374e9ddf74.html] 
+table(AnneArundel$`Board of Education (1) (50000176644)`)
+table(AnneArundel$`Board of Education (3) (50000173844)`) # Yocum
+table(AnneArundel$`Board of Education (4) (50000176744)`)
+table(AnneArundel$`Board of Education (5) (50000176844)`) # Latoya
+
+AnneArundel <- AnneArundel |> 
+  mutate(REP_BOE = case_when(
+    `Board of Education (3) (50000173844)` == "Chuck Yocum (10024024.0000151)" ~ "REP",
+    `Board of Education (5) (50000176844)` == "LaToya Nkongolo (10008008.0000078)" ~ "REP",
+    TRUE ~ "Other"
+  ),
+  not_split = ifelse(str_detect(`Ballot Style`, "Rep") & REP_BOE == "REP" | 
+                       str_detect(`Ballot Style`, "Dem") & REP_BOE != "REP" , 1 , 0)) # if they are REP and voted for one of the 1776 ed candidates OR Dem and did NOT vote for one of the 1776 candidates, they did NOT split their PRIMARY ballot
+table(AnneArundel$not_split) 
+# 55953 not split
+# 37613 split from party candidates
+
+AnneArundel_Rep <- AnneArundel |> 
+  filter(str_detect(`Ballot Style`, "Rep"))
+table(AnneArundel_Rep$not_split)
+# 3903 Republicans did not split (voted for 1776 candidates) 
+3903/(3903+31555)*100 # 11% Rep did not split
+# 31555 Republicans did split
+```
+
+ndervote Coding
+
+Montgomery
+
+```{r}
+Montgomery |>
+  filter(
+    `DEM President of the United States (4) (500001630104)` == "undervote" |
+    `DEM President of the United States (6) (500001630106)` == "undervote" |
+    `DEM President of the United States (8) (500001630108)` == "undervote"
+  ) |>
+  summarize(
+    `Race 4` = sum(`DEM President of the United States (4) (500001630104)` == "undervote", na.rm = TRUE),
+    `Race 6` = sum(`DEM President of the United States (6) (500001630106)` == "undervote", na.rm = TRUE),
+    `Race 8` = sum(`DEM President of the United States (8) (500001630108)` == "undervote", na.rm = TRUE)
+  )
+5 +	61+	269	
+#335 undervotes for president
+
+Montgomery |>
+  summarize(
+    `Total DEM (4)` = sum(!is.na(`DEM President of the United States (4) (500001630104)`)),
+    `Total DEM (6)` = sum(!is.na(`DEM President of the United States (6) (500001630106)`)),
+    `Total DEM (8)` = sum(!is.na(`DEM President of the United States (8) (500001630108)`))
+  )
+2329 + 12548 + 62687
+#77564
+
+335/77564
+#0.4% of all democratic presidential votes were undervotes
+
+
+Montgomery |>
+  filter(
+    `REP President of the United States (4) (500001630204)` == "undervote" |
+    `REP President of the United States (6) (500001630206)` == "undervote" |
+    `REP President of the United States (8) (500001630208)` == "undervote"
+  ) |>
+  summarize(
+    `REP Race 4` = sum(`REP President of the United States (4) (500001630204)` == "undervote", na.rm = TRUE),
+    `REP Race 6` = sum(`REP President of the United States (6) (500001630206)` == "undervote", na.rm = TRUE),
+    `REP Race 8` = sum(`REP President of the United States (8) (500001630208)` == "undervote", na.rm = TRUE),
+    `Total REP (4)` = sum(!is.na(`REP President of the United States (4) (500001630204)`)),
+    `Total REP (6)` = sum(!is.na(`REP President of the United States (6) (500001630206)`)),
+    `Total REP (8)` = sum(!is.na(`REP President of the United States (8) (500001630208)`)))
+# JUST undervotes:
+13	+ 0 +	348
+# 361 undervotes for Rep pres
+# TOTAL REP votes:
+435 + 0 + 11988
+# % undervote REP:
+361/12423
+# 2.9% undervotes for Rep president out of total votes
+
+Montgomery |>
+  filter(
+    `DEM U.S. Senator (5000017641)` == "undervote" )|>
+  summarize(
+    Total = sum(`DEM U.S. Senator (5000017641)`  == "undervote", na.rm = TRUE),
+  )
+# 897 senate dem undervotes
+
+Montgomery |>
+  summarize(
+    totalvotes=sum(!is.na(`DEM U.S. Senator (5000017641)` )))
+# Total senate dem votes 77564	
+
+897/77564	
+# 1.2% undervote
+
+
+Montgomery |>
+  filter(
+    `REP U.S. Senator (5000017642)` == "undervote" )|>
+  summarize(
+    Total = sum(`REP U.S. Senator (5000017642)`  == "undervote", na.rm = TRUE),
+  )
+#306 senate rep undervotes
+
+Montgomery |>
+  summarize(
+    totalvotes=sum(!is.na(`REP U.S. Senator (5000017642)` )))
+#Total senate rep votes 16976		
+
+306/16976
+#1.8% of all senate rep votes were undervotes
+```
+
+Undervote Howard
+
+```{r}
+Howard |>
+  filter(
+    `DEM President of the United States (3) (500001630103)`  == "undervote" ) |>
+  summarize(
+    Count = sum(`DEM President of the United States (3) (500001630103)`  == "undervote", na.rm = TRUE)
+  )
+# 231 undervotes for president
+
+Howard |>
+  summarize(
+    Count = sum(!is.na( `DEM President of the United States (3) (500001630103)`))
+  )
+# 44726	total dem pres votes
+
+231/44726
+# 0.5% of all democratic presidential votes were undervotes
+
+
+Howard |>
+  filter(
+    `REP President of the United States (3) (500001630203)`   == "undervote" ) |>
+  summarize(
+    Count = sum(`REP President of the United States (3) (500001630203)`   == "undervote", na.rm = TRUE)
+  )
+# 512 undervotes for president
+
+Howard |>
+  summarize(
+    Count = sum(!is.na(  `REP President of the United States (3) (500001630203)` ))
+  )
+# 15901
+
+512/15901
+# 3.2% undervote for president rep candidates
+
+Howard |>
+  filter(
+   `DEM U.S. Senator (5000017641)`  == "undervote" ) |>
+  summarize(
+    Count = sum(`DEM U.S. Senator (5000017641)`  == "undervote", na.rm = TRUE)
+  )
+# 967 undervotes for senate
+
+Howard |>
+  summarize(
+    Count = sum(!is.na( `DEM U.S. Senator (5000017641)`))
+  )
+# 44726	
+
+927/44726
+# 2.1% undervote democrate senate race
+
+
+Howard |>
+  filter(
+   `REP U.S. Senator (5000017642)`  == "undervote" ) |>
+  summarize(
+    Count = sum(`REP U.S. Senator (5000017642)`  == "undervote", na.rm = TRUE)
+  )
+# 261 undervotes for senate
+
+Howard |>
+  summarize(
+    Count = sum(!is.na( `REP U.S. Senator (5000017642)`))
+  )
+# 15901		
+
+261/15901
+# 1.6% undervotes for rep senate
+```
+
+
+Frederick Undervotes
+```{r}
+Frederick |>
+  filter(
+    `DEM President of the United States (6) (500001630106)`   == "undervote" ) |>
+  summarize(
+    Count = sum( `DEM President of the United States (6) (500001630106)`   == "undervote", na.rm = TRUE)
+  )
+# 168 undervotes for president
+
+Frederick |>
+  summarize(
+    Count = sum(!is.na(  `DEM President of the United States (6) (500001630106)` ))
+  )
+# 25772	total dem pres votes
+
+168/25772
+# 0.6% of all democratic presidential votes were undervotes
+
+
+Frederick |>
+  filter(
+   `REP President of the United States (6) (500001630206)`    == "undervote" ) |>
+  summarize(
+    Count = sum( `REP President of the United States (6) (500001630206)`    == "undervote", na.rm = TRUE)
+  )
+# 491 undervotes for president
+
+Frederick |>
+  summarize(
+    Count = sum(!is.na(  `REP President of the United States (6) (500001630206)`  ))
+  )
+# 20457		total rep pres votes
+
+491/20457
+# 2.4% of all republican presidential votes were undervotes
+
+
+Frederick |>
+  filter(
+   `DEM U.S. Senator (5000017641)`   == "undervote" ) |>
+  summarize(
+    Count = sum( `DEM U.S. Senator (5000017641)`    == "undervote", na.rm = TRUE)
+  )
+# 471 undervotes for senates
+
+Frederick |>
+  summarize(
+    Count = sum(!is.na(  `DEM U.S. Senator (5000017641)`  ))
+  )
+# 25772	total dem senate votes
+
+471/25772
+# 1.8% of all democratic senate votes were undervotes
+
+Frederick |>
+  filter(
+   `REP U.S. Senator (5000017642)`      == "undervote" ) |>
+  summarize(
+    Count = sum( `REP U.S. Senator (5000017642)`      == "undervote", na.rm = TRUE)
+  )
+# 442	undervotes for senate
+
+Frederick |>
+  summarize(
+    Count = sum(!is.na( `REP U.S. Senator (5000017642)`    ))
+  )
+# 20457	total rep senate votes
+
+442/20457
+# 2.2% of all republican senate votes were undervotes
+```
+
+Baltimore City Undervotes
+```{r}
+BaltimoreCity |>
+  filter(
+    `DEM President of the United States (2) (500001630102)` == "undervote" |
+    `DEM President of the United States (7) (500001630107)`    == "undervote" ) |>
+  summarize(
+    `Race 2` = sum( `DEM President of the United States (2) (500001630102)` == "undervote", na.rm = TRUE),
+    `Race 7` = sum( `DEM President of the United States (7) (500001630107)`  == "undervote", na.rm = TRUE)
+  )
+57+	1146	
+# 1203 undervotes for dem president
+
+BaltimoreCity |>
+  summarize(
+    `Total DEM (2)` = sum(!is.na(`DEM President of the United States (2) (500001630102)`)),
+    `Total DEM (7)` = sum(!is.na(`DEM President of the United States (7) (500001630107)` ))
+  )
+8430+	85254
+# 93684
+
+1203/93684
+# 1.3% of all democratic presidential votes were undervotes
+
+BaltimoreCity |>
+  filter(
+   `REP President of the United States (2) (500001630202)` == "undervote" |
+    `REP President of the United States (7) (500001630207)`    == "undervote" ) |>
+  summarize(
+    `Race 2` = sum( `REP President of the United States (2) (500001630202)` == "undervote", na.rm = TRUE),
+    `Race 7` = sum( `REP President of the United States (7) (500001630207)`  == "undervote", na.rm = TRUE)
+  )
+0	+175		
+# 175 undervotes for rep president
+
+BaltimoreCity |>
+  summarize(
+    `Total DEM (2)` = sum(!is.na(`REP President of the United States (2) (500001630202)`)),
+    `Total DEM (7)` = sum(!is.na(`REP President of the United States (7) (500001630207)` ))
+  )
+0	+ 4090
+
+# 4090
+175/4090
+# 4.3% of all republican presidential votes were undervotes
+
+BaltimoreCity |>
+  filter(
+  `DEM U.S. Senator (5000017641)`   == "undervote" ) |>
+  summarize(
+    Count = sum( `DEM U.S. Senator (5000017641)`    == "undervote", na.rm = TRUE)
+  )
+# 3088 undervotes for senates
+
+BaltimoreCity |>
+  summarize(
+    Count = sum(!is.na( `DEM U.S. Senator (5000017641)`  ))
+  )
+# 93684	total dem senate votes
+
+3088/93684
+# 3.3% of all democratic senate votes were undervotes
+
+
+BaltimoreCity |>
+  filter(
+  `REP U.S. Senator (5000017642)`  == "undervote" ) |>
+  summarize(
+    Count = sum( `REP U.S. Senator (5000017642)`   == "undervote", na.rm = TRUE)
+  )
+# 157 undervotes for rep senate
+
+BaltimoreCity |>
+  summarize(
+    Count = sum(!is.na( `REP U.S. Senator (5000017642)` ))
+  )
+# 4548		total rep senate votes
+
+157/4548
+# 3.5% of all republican senate votes were undervotes
+```
+
+
+
+
+Undervotes Baltimore County
+```{r}
+BaltimoreCounty |>
+  filter(
+    `DEM President of the United States (1) (500001630101)` == "undervote" |
+   `DEM President of the United States (2) (500001630102)`  == "undervote" |
+   `DEM President of the United States (7) (500001630107)`   == "undervote"
+  ) |>
+  summarize(
+    `Race 1` = sum( `DEM President of the United States (1) (500001630101)` == "undervote", na.rm = TRUE),
+    `Race 2` = sum( `DEM President of the United States (2) (500001630102)` == "undervote", na.rm = TRUE),
+    `Race 7` = sum(`DEM President of the United States (7) (500001630107)` == "undervote", na.rm = TRUE)
+  )
+18 +	243 +	70	
+# 331 undervotes for president
+
+BaltimoreCounty |>
+  summarize(
+    `Total DEM (1)` = sum(!is.na(`DEM President of the United States (1) (500001630101)`)),
+    `Total DEM (2)` = sum(!is.na(`DEM President of the United States (2) (500001630102)`)),
+    `Total DEM (7)` = sum(!is.na(`DEM President of the United States (7) (500001630107)`))
+  )
+3565	+ 48222	+ 15297
+# 67084
+
+331/67084
+# 0.5 percent of all dem votes for president were undervotes
+
+BaltimoreCounty |>
+  filter(
+   `REP President of the United States (1) (500001630201)`  == "undervote" |
+  `REP President of the United States (2) (500001630202)`    == "undervote" |
+   `REP President of the United States (7) (500001630207)`      == "undervote"
+  ) |>
+  summarize(
+    `Race 1` = sum( `REP President of the United States (1) (500001630201)`  == "undervote", na.rm = TRUE),
+    `Race 2` = sum( `REP President of the United States (2) (500001630202)`   == "undervote", na.rm = TRUE),
+    `Race 7` = sum(`REP President of the United States (7) (500001630207)`    == "undervote", na.rm = TRUE)
+  )
+0+	471	+72	
+# 543 undervotes for president
+
+BaltimoreCounty |>
+  summarize(
+    `Total rep (1)` = sum(!is.na(`REP President of the United States (1) (500001630201)` )),
+    `Total rep (2)` = sum(!is.na(`REP President of the United States (2) (500001630202)`  )),
+    `Total rep (7)` = sum(!is.na(`REP President of the United States (7) (500001630207)` ))
+  )
+
+0	+ 21924 + 5837
+# 27761
+
+543/27761
+# 2% of all votes for rep president was an undervote
+
+BaltimoreCounty |>
+  filter(
+  `DEM U.S. Senator (5000017641)`    == "undervote" ) |>
+  summarize(
+    Count = sum( `DEM U.S. Senator (5000017641)`    == "undervote", na.rm = TRUE)
+  )
+# 1107 undervotes for senates
+
+BaltimoreCounty |>
+  summarize(
+    Count = sum(!is.na( `DEM U.S. Senator (5000017641)`   ))
+  )
+# 67084	total dem senate votes
+
+1107/67084
+# 1.7% of all democratic senate votes were undervotes
+
+BaltimoreCounty |>
+  filter(
+  `REP U.S. Senator (5000017642)`  == "undervote" ) |>
+  summarize(
+    Count = sum( `REP U.S. Senator (5000017642)`  == "undervote", na.rm = TRUE)
+  )
+# 530 undervotes for rep senate
+
+BaltimoreCounty |>
+  summarize(
+    Count = sum(!is.na( `REP U.S. Senator (5000017642)`))
+  )
+# 32915	total rep senate votes
+
+530/32915
+# 1.6% of all republican senate votes were undervotes
+```
+
+
+Results of undervotes for each race and county
+Montgomery County
+President
+dem 0.4%
+rep 2.9%
+senate
+dem 1.2%
+rep 1.8%
+
+
+Howard County
+President
+dem 0.5%
+rep 3.2%
+senate
+dem 2.1%
+rep 1.6%
+
+Frederick County
+President
+dem 0.6%
+rep 2.4%
+senate
+dem 1.8%
+rep 2.2%
+
+Baltimore City
+President
+dem 1.3%
+rep 4.3%
+senate
+dem 3.3%
+rep 3.5%
+
+
+Baltimore County
+President
+dem 0.5%
+rep 2.0%
+senate
+dem 1.7%
+rep 1.6%
+
+Across the 5 counties Republicans had a higher undervote percentage with the average being 2.3% higher than Democrats. Republicans undervoted more than Democrats for Senate but the difference is much smaller (an average of 0.12%) This might show that Republicans in Maryland are less happy with their options for president in the primary than Democrats were. 
+
