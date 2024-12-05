@@ -252,7 +252,7 @@ Here we can use LLMs in a tidy manner, by starting with the dataframe and callin
 
 **Answer** 
 - It wont run! And my desktop machine at home (that I'm running this on) is a nice new 32GB ram and A770 graphics card that I built this year.
-- ACTUALLY after running it again and waiting 9 minutes it finally ran
+- ACTUALLY after running it again, closing other programs, and waiting 9 minutes it finally ran
 The results dont really make sense, the columns list things like:
 KamalaHarris.com	
 Team Trump	
