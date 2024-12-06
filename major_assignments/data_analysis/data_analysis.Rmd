@@ -44,7 +44,8 @@ Alleghany <- read_excel("data/01_Allegany PP24 CVRs/01PP24_Prov_CVR_SBE.xlsx") |
   mutate(County = "Alleghany")
 AnneArundel <- read_excel("data/02_Anne Arundel PP24 CVRs/02PP24_Prov_CVR_SBE.xlsx") |> 
   mutate(County = "Anne Arundel")
-BaltimoreCity <- read_excel("data/03_Baltimore City PP24 CVRs/03PP24_Prov_CVR_SBE.xlsx") |>   mutate(County = "Baltimore City")
+BaltimoreCity <- read_excel("data/03_Baltimore City PP24 CVRs/03PP24_Prov_CVR_SBE.xlsx") |>  
+  mutate(County = "Baltimore City")
 BaltimoreCounty <- read_excel("data/04_Baltimore County PP24 CVRs/04PP24_Prov_CVR_SBE.xlsx") |> 
   mutate(County = "Baltimore County")
 Calvert <- read_excel("data/05_Calvert PP24 CVRs/05PP24_Prov_CVR_SBE.xlsx") |> 
@@ -219,12 +220,75 @@ table(AnneArundel_Rep$not_split)
 3903/(3903+31555)*100 # 11% Rep did not split
 # 31555 Republicans did split
 ```
+```{r, BOE Maps by Precinct}
+# Load libraries
+library(sf)
+library(janitor)
+library(tidycensus)
+library(ggplot2)
+library(cowplot)
+library(tigris)
 
-ndervote Coding
+# Counties I am working with: Anne Arundel, Frederick, Talbot, Washington
+# Counties that appear to also have had right wing PAC supported candidates: Cecil
+
+# Trying to code a sub data set organized by precinct within each county
+# Rep_Rep = republicans that voted for the rep supported candidates
+# Rep_Split = republicans that did not vote for the right wing candidates
+# Dem_Dem = dems that did not vote for the right wing candidates
+# Dem_Split = dems that did vote for the right wing candidates
+
+AnneArundel <- AnneArundel |> 
+  # lets simplify the party ballot var structure
+  mutate(Ballot_party = case_when(
+      (str_detect(`Ballot Style`, "Rep")) ~ "Rep",
+      (str_detect(`Ballot Style`, "Dem")) ~ "Dem",
+      TRUE ~ "Other"))
+
+AnneArundel <- AnneArundel |> 
+  # lets make the breakdown of split or not split by party
+  mutate(split = case_when(
+      Ballot_party == "Rep" & REP_BOE == "REP"  ~ "Rep_Rep",
+      Ballot_party == "Dem" & REP_BOE != "REP" ~ "Dem_Dem",
+      Ballot_party == "Rep" & REP_BOE != "REP"  ~ "Rep_Split",
+      Ballot_party == "Dem" & REP_BOE == "REP" ~ "Dem_Split",
+      TRUE ~ "Other"
+      ))
+
+New_AnneArundel <- AnneArundel |>
+  filter(split != "Other") |> # this is so we are only looking at partisan ballots and percentages
+  filter(str_detect(Precinct, "003-") | str_detect(Precinct, "005-")) # these are the only two districts that had BOE elections
+
+# Now a table of splits, party counts, by precinct
+AA1 <- New_AnneArundel |>  
+ group_by(Precinct) |> 
+    summarise(Dem_count = sum(Ballot_party == "Dem"),
+              Rep_count = sum(Ballot_party == "Rep"),
+              Rep_split = sum(split == "Rep_Split"),
+              Dem_split = sum(split == "Dem_Split"),
+              total_split = Rep_split + Dem_split,
+              n = n(),
+              total_split_PCT = total_split/n*100,
+              Dem_split_PCT = Dem_split/Dem_count*100,
+              Rep_split_PCT = Rep_split/Rep_count*100
+              )
+
+table(AnneArundel$Precinct)
+md_counties <- counties |>
+  filter(STATEFP == "24")
+
+```
+
+
+Undervote Coding
 
 Montgomery
 
 ```{r}
+
+glimpse(Montgomery)
+
+
 Montgomery |>
   filter(
     `DEM President of the United States (4) (500001630104)` == "undervote" |
@@ -261,18 +325,23 @@ Montgomery |>
   summarize(
     `REP Race 4` = sum(`REP President of the United States (4) (500001630204)` == "undervote", na.rm = TRUE),
     `REP Race 6` = sum(`REP President of the United States (6) (500001630206)` == "undervote", na.rm = TRUE),
-    `REP Race 8` = sum(`REP President of the United States (8) (500001630208)` == "undervote", na.rm = TRUE),
+    `REP Race 8` = sum(`REP President of the United States (8) (500001630208)` == "undervote", na.rm = TRUE)
+  )
+13	+0 +	348
+#361 undervotes for Rep pres
+
+Montgomery |>
+  summarize(
     `Total REP (4)` = sum(!is.na(`REP President of the United States (4) (500001630204)`)),
     `Total REP (6)` = sum(!is.na(`REP President of the United States (6) (500001630206)`)),
-    `Total REP (8)` = sum(!is.na(`REP President of the United States (8) (500001630208)`)))
-# JUST undervotes:
-13	+ 0 +	348
-# 361 undervotes for Rep pres
-# TOTAL REP votes:
-435 + 0 + 11988
-# % undervote REP:
+    `Total REP (8)` = sum(!is.na(`REP President of the United States (8) (500001630208)`))
+  )
+
+435+0 +11988
+
 361/12423
-# 2.9% undervotes for Rep president out of total votes
+#2.9% undervotes for Rep president out of total votes
+
 
 Montgomery |>
   filter(
@@ -280,15 +349,15 @@ Montgomery |>
   summarize(
     Total = sum(`DEM U.S. Senator (5000017641)`  == "undervote", na.rm = TRUE),
   )
-# 897 senate dem undervotes
+#897 senate dem undervotes
 
 Montgomery |>
   summarize(
     totalvotes=sum(!is.na(`DEM U.S. Senator (5000017641)` )))
-# Total senate dem votes 77564	
+#Total senate dem votes 77564	
 
 897/77564	
-# 1.2% undervote
+#1.2% undervote
 
 
 Montgomery |>
@@ -304,29 +373,77 @@ Montgomery |>
     totalvotes=sum(!is.na(`REP U.S. Senator (5000017642)` )))
 #Total senate rep votes 16976		
 
+
 306/16976
 #1.8% of all senate rep votes were undervotes
+
+
+
+
+undervotes_df <- tibble(
+  County = character(),
+  DEM_President_Undervotes = numeric(),
+  DEM_President_Percentage = numeric(),
+  REP_President_Undervotes = numeric(),
+  REP_President_Percentage = numeric(),
+  DEM_Senate_Undervotes = numeric(),
+  DEM_Senate_Percentage = numeric(),
+  REP_Senate_Undervotes = numeric(),
+  REP_Senate_Percentage = numeric()
+)
+
+# Add Montgomery County results manually
+montgomery_results <- tibble(
+  County = "Montgomery",
+  DEM_President_Undervotes = 335,
+  DEM_President_Percentage = 335 / 77564 * 100,  
+  REP_President_Undervotes = 361,
+  REP_President_Percentage = 361 / 12423 * 100,  
+  DEM_Senate_Undervotes = 897,
+  DEM_Senate_Percentage = 897 / 77564 * 100,   
+  REP_Senate_Undervotes = 306,
+  REP_Senate_Percentage = 306 / 16976 * 100, 
+  Total_REP_Votes = 12423,  
+  Total_DEM_Votes = 77564, 
+   Percent_DEM_of_Total = 77564 / (77564 + 12423) * 100 
+)
+
+# Append to the DataFrame
+undervotes_df <- bind_rows(undervotes_df, montgomery_results)
+
+undervotes_df
+
+
+
+
+#undervotes_df <- undervotes_df %>%
+ # filter(County != "Montgomery")
+
 ```
 
 Undervote Howard
 
 ```{r}
+
+glimpse(Howard)
+
+
 Howard |>
   filter(
     `DEM President of the United States (3) (500001630103)`  == "undervote" ) |>
   summarize(
     Count = sum(`DEM President of the United States (3) (500001630103)`  == "undervote", na.rm = TRUE)
   )
-# 231 undervotes for president
+#231 undervotes for president
 
 Howard |>
   summarize(
     Count = sum(!is.na( `DEM President of the United States (3) (500001630103)`))
   )
-# 44726	total dem pres votes
+#44726	total dem pres votes
 
 231/44726
-# 0.5% of all democratic presidential votes were undervotes
+#0.5% of all democratic presidential votes were undervotes
 
 
 Howard |>
@@ -335,16 +452,17 @@ Howard |>
   summarize(
     Count = sum(`REP President of the United States (3) (500001630203)`   == "undervote", na.rm = TRUE)
   )
-# 512 undervotes for president
+#512 undervotes for president
 
 Howard |>
   summarize(
     Count = sum(!is.na(  `REP President of the United States (3) (500001630203)` ))
   )
-# 15901
+#15901
 
 512/15901
-# 3.2% undervote for president rep candidates
+#3.2% undervote for president rep candidates
+
 
 Howard |>
   filter(
@@ -352,16 +470,16 @@ Howard |>
   summarize(
     Count = sum(`DEM U.S. Senator (5000017641)`  == "undervote", na.rm = TRUE)
   )
-# 967 undervotes for senate
+#967 undervotes for senate
 
 Howard |>
   summarize(
     Count = sum(!is.na( `DEM U.S. Senator (5000017641)`))
   )
-# 44726	
+#44726	
 
 927/44726
-# 2.1% undervote democrate senate race
+#2.1% undervote democrate senate race
 
 
 Howard |>
@@ -370,37 +488,79 @@ Howard |>
   summarize(
     Count = sum(`REP U.S. Senator (5000017642)`  == "undervote", na.rm = TRUE)
   )
-# 261 undervotes for senate
+#261	 undervotes for senate
 
 Howard |>
   summarize(
     Count = sum(!is.na( `REP U.S. Senator (5000017642)`))
   )
-# 15901		
+#15901		
 
 261/15901
-# 1.6% undervotes for rep senate
+#1.6% undervotes for rep senate
+
+
+undervotes_df <- tibble(
+  County = character(),
+  DEM_President_Undervotes = numeric(),
+  DEM_President_Percentage = numeric(),
+  REP_President_Undervotes = numeric(),
+  REP_President_Percentage = numeric(),
+  DEM_Senate_Undervotes = numeric(),
+  DEM_Senate_Percentage = numeric(),
+  REP_Senate_Undervotes = numeric(),
+  REP_Senate_Percentage = numeric()
+)
+
+# Add Montgomery County results manually
+Howard_results <- tibble(
+  County = "Howard",
+  DEM_President_Undervotes = 231,
+  DEM_President_Percentage = 231 / 44726 * 100,  
+  REP_President_Undervotes = 512,
+  REP_President_Percentage = 512 / 15901 * 100,  
+  DEM_Senate_Undervotes = 967,
+  DEM_Senate_Percentage = 967 / 44726 * 100,    
+  REP_Senate_Undervotes = 261,
+  REP_Senate_Percentage = 261 / 15901 * 100,
+  Total_REP_Votes = 15901,  
+  Total_DEM_Votes = 44726, 
+  Percent_DEM_of_Total = 44726 / (44726 + 15901) * 100  
+
+)
+
+# Append to the DataFrame
+undervotes_df <- bind_rows(undervotes_df, Howard_results)
+undervotes_df
+
+
 ```
+
+
+
 
 
 Frederick Undervotes
 ```{r}
+glimpse(Frederick)
+
+
 Frederick |>
   filter(
     `DEM President of the United States (6) (500001630106)`   == "undervote" ) |>
   summarize(
     Count = sum( `DEM President of the United States (6) (500001630106)`   == "undervote", na.rm = TRUE)
   )
-# 168 undervotes for president
+#168 undervotes for president
 
 Frederick |>
   summarize(
     Count = sum(!is.na(  `DEM President of the United States (6) (500001630106)` ))
   )
-# 25772	total dem pres votes
+#25772		total dem pres votes
 
 168/25772
-# 0.6% of all democratic presidential votes were undervotes
+#0.6% of all democratic presidential votes were undervotes
 
 
 Frederick |>
@@ -409,16 +569,16 @@ Frederick |>
   summarize(
     Count = sum( `REP President of the United States (6) (500001630206)`    == "undervote", na.rm = TRUE)
   )
-# 491 undervotes for president
+#491 undervotes for president
 
 Frederick |>
   summarize(
     Count = sum(!is.na(  `REP President of the United States (6) (500001630206)`  ))
   )
-# 20457		total rep pres votes
+#20457		total rep pres votes
 
 491/20457
-# 2.4% of all republican presidential votes were undervotes
+#2.4% of all republican presidential votes were undervotes
 
 
 Frederick |>
@@ -427,16 +587,17 @@ Frederick |>
   summarize(
     Count = sum( `DEM U.S. Senator (5000017641)`    == "undervote", na.rm = TRUE)
   )
-# 471 undervotes for senates
+#471 undervotes for senates
 
 Frederick |>
   summarize(
     Count = sum(!is.na(  `DEM U.S. Senator (5000017641)`  ))
   )
-# 25772	total dem senate votes
+#25772	total dem senate votes
 
 471/25772
-# 1.8% of all democratic senate votes were undervotes
+#1.8% of all democratic senate votes were undervotes
+
 
 Frederick |>
   filter(
@@ -444,20 +605,66 @@ Frederick |>
   summarize(
     Count = sum( `REP U.S. Senator (5000017642)`      == "undervote", na.rm = TRUE)
   )
-# 442	undervotes for senate
+#442	 undervotes for senate
 
 Frederick |>
   summarize(
     Count = sum(!is.na( `REP U.S. Senator (5000017642)`    ))
   )
-# 20457	total rep senate votes
+#20457		total rep sebate votes
 
 442/20457
-# 2.2% of all republican senate votes were undervotes
+#2.2% of all republican senate votes were undervotes
+
+undervotes_df <- data.frame(
+  County = character(),
+  DEM_President_Undervotes = numeric(),
+  DEM_President_Percentage = numeric(),
+  REP_President_Undervotes = numeric(),
+  REP_President_Percentage = numeric(),
+  DEM_Senate_Undervotes = numeric(),
+  DEM_Senate_Percentage = numeric(),
+  REP_Senate_Undervotes = numeric(),
+  REP_Senate_Percentage = numeric(),
+  stringsAsFactors = FALSE 
+)
+
+Frederick_results <- data.frame(
+  County = "Frederick",
+  DEM_President_Undervotes = 168,
+  DEM_President_Percentage = 168 / 25772 * 100,
+  REP_President_Undervotes = 491,
+  REP_President_Percentage = 491 / 20457 * 100,  
+  DEM_Senate_Undervotes = 471,
+  DEM_Senate_Percentage = 471 / 25772 * 100,    
+  REP_Senate_Undervotes = 442,
+  REP_Senate_Percentage = 442 / 20457 * 100,     
+  Total_REP_Votes = 20457,  
+  Total_DEM_Votes = 25772, 
+  Percent_DEM_of_Total = 25772 / (25772 + 20457) * 100,
+  stringsAsFactors = FALSE
+)
+
+undervotes_df <- rbind(undervotes_df, Frederick_results)
+
+
+print(undervotes_df)
+
+
+undervotes_df <- undervotes_df %>%
+  select(-Vote_Difference)
+
 ```
+
+
+
 
 Baltimore City Undervotes
 ```{r}
+
+glimpse(BaltimoreCity)
+
+
 BaltimoreCity |>
   filter(
     `DEM President of the United States (2) (500001630102)` == "undervote" |
@@ -467,7 +674,7 @@ BaltimoreCity |>
     `Race 7` = sum( `DEM President of the United States (7) (500001630107)`  == "undervote", na.rm = TRUE)
   )
 57+	1146	
-# 1203 undervotes for dem president
+#1203 undervotes for dem president
 
 BaltimoreCity |>
   summarize(
@@ -478,7 +685,10 @@ BaltimoreCity |>
 # 93684
 
 1203/93684
-# 1.3% of all democratic presidential votes were undervotes
+#1.3% of all democratic presidential votes were undervotes
+
+
+
 
 BaltimoreCity |>
   filter(
@@ -489,18 +699,21 @@ BaltimoreCity |>
     `Race 7` = sum( `REP President of the United States (7) (500001630207)`  == "undervote", na.rm = TRUE)
   )
 0	+175		
-# 175 undervotes for rep president
+#175 undervotes for rep president
 
 BaltimoreCity |>
   summarize(
-    `Total DEM (2)` = sum(!is.na(`REP President of the United States (2) (500001630202)`)),
-    `Total DEM (7)` = sum(!is.na(`REP President of the United States (7) (500001630207)` ))
+    `Total REP (2)` = sum(!is.na(`REP President of the United States (2) (500001630202)`)),
+    `Total REP (7)` = sum(!is.na(`REP President of the United States (7) (500001630207)` ))
   )
-0	+ 4090
+0	+4090
 
 # 4090
 175/4090
-# 4.3% of all republican presidential votes were undervotes
+#4.3% of all republican presidential votes were undervotes
+
+
+
 
 BaltimoreCity |>
   filter(
@@ -508,16 +721,16 @@ BaltimoreCity |>
   summarize(
     Count = sum( `DEM U.S. Senator (5000017641)`    == "undervote", na.rm = TRUE)
   )
-# 3088 undervotes for senates
+#3088 undervotes for senates
 
 BaltimoreCity |>
   summarize(
     Count = sum(!is.na( `DEM U.S. Senator (5000017641)`  ))
   )
-# 93684	total dem senate votes
+#93684	total dem senate votes
 
 3088/93684
-# 3.3% of all democratic senate votes were undervotes
+#3.3% of all democratic senate votes were undervotes
 
 
 BaltimoreCity |>
@@ -526,16 +739,39 @@ BaltimoreCity |>
   summarize(
     Count = sum( `REP U.S. Senator (5000017642)`   == "undervote", na.rm = TRUE)
   )
-# 157 undervotes for rep senate
+#157 undervotes for rep senate
 
 BaltimoreCity |>
   summarize(
     Count = sum(!is.na( `REP U.S. Senator (5000017642)` ))
   )
-# 4548		total rep senate votes
+#4548		total rep senate votes
 
 157/4548
-# 3.5% of all republican senate votes were undervotes
+#3.5% of all republican senate votes were undervotes
+
+BaltimoreCity_results <- data.frame(
+  County = "Baltimore City",
+  DEM_President_Undervotes = 1203,
+  DEM_President_Percentage = 1203 / 93684 * 100,  # Calculated manually
+  REP_President_Undervotes = 175,
+  REP_President_Percentage = 175 / 4090 * 100,  # Calculated manually
+  DEM_Senate_Undervotes = 3088,
+  DEM_Senate_Percentage = 3088 / 93684 * 100,    # Calculated manually
+  REP_Senate_Undervotes = 157,
+  REP_Senate_Percentage = 157 / 4548 * 100,     # Calculated manually
+  Total_REP_Votes = 4090,  
+  Total_DEM_Votes = 93684, 
+  Percent_DEM_of_Total = 93684 / (93684 + 4090) * 100,
+  stringsAsFactors = FALSE
+)
+
+# Append to the data frame
+undervotes_df <- rbind(undervotes_df, BaltimoreCity_results)
+
+undervotes_df
+
+
 ```
 
 
@@ -543,6 +779,10 @@ BaltimoreCity |>
 
 Undervotes Baltimore County
 ```{r}
+
+glimpse(BaltimoreCounty)
+
+
 BaltimoreCounty |>
   filter(
     `DEM President of the United States (1) (500001630101)` == "undervote" |
@@ -554,8 +794,8 @@ BaltimoreCounty |>
     `Race 2` = sum( `DEM President of the United States (2) (500001630102)` == "undervote", na.rm = TRUE),
     `Race 7` = sum(`DEM President of the United States (7) (500001630107)` == "undervote", na.rm = TRUE)
   )
-18 +	243 +	70	
-# 331 undervotes for president
+18+	243+	70	
+#331 undervotes for president
 
 BaltimoreCounty |>
   summarize(
@@ -563,11 +803,12 @@ BaltimoreCounty |>
     `Total DEM (2)` = sum(!is.na(`DEM President of the United States (2) (500001630102)`)),
     `Total DEM (7)` = sum(!is.na(`DEM President of the United States (7) (500001630107)`))
   )
-3565	+ 48222	+ 15297
-# 67084
+3565	+48222	+15297
+#67084
 
 331/67084
-# 0.5 percent of all dem votes for president were undervotes
+#0.5 percent of all dem votes for president were undervotes
+
 
 BaltimoreCounty |>
   filter(
@@ -581,7 +822,7 @@ BaltimoreCounty |>
     `Race 7` = sum(`REP President of the United States (7) (500001630207)`    == "undervote", na.rm = TRUE)
   )
 0+	471	+72	
-# 543 undervotes for president
+#543 undervotes for president
 
 BaltimoreCounty |>
   summarize(
@@ -590,11 +831,13 @@ BaltimoreCounty |>
     `Total rep (7)` = sum(!is.na(`REP President of the United States (7) (500001630207)` ))
   )
 
-0	+ 21924 + 5837
-# 27761
+0	+21924 +5837
+#27761
 
 543/27761
-# 2% of all votes for rep president was an undervote
+#2% of all votes for rep president was an undervote
+
+
 
 BaltimoreCounty |>
   filter(
@@ -602,16 +845,18 @@ BaltimoreCounty |>
   summarize(
     Count = sum( `DEM U.S. Senator (5000017641)`    == "undervote", na.rm = TRUE)
   )
-# 1107 undervotes for senates
+#1107 undervotes for senates
 
 BaltimoreCounty |>
   summarize(
     Count = sum(!is.na( `DEM U.S. Senator (5000017641)`   ))
   )
-# 67084	total dem senate votes
+#67084	total dem senate votes
 
 1107/67084
-# 1.7% of all democratic senate votes were undervotes
+#1.7% of all democratic senate votes were undervotes
+
+
 
 BaltimoreCounty |>
   filter(
@@ -619,18 +864,1845 @@ BaltimoreCounty |>
   summarize(
     Count = sum( `REP U.S. Senator (5000017642)`  == "undervote", na.rm = TRUE)
   )
-# 530 undervotes for rep senate
+#530	 undervotes for rep senate
 
 BaltimoreCounty |>
   summarize(
     Count = sum(!is.na( `REP U.S. Senator (5000017642)`))
   )
-# 32915	total rep senate votes
+#32915		total rep senate votes
 
 530/32915
-# 1.6% of all republican senate votes were undervotes
+#1.6% of all republican senate votes were undervotes
+
+BaltimoreCounty_results <- data.frame(
+  County = "Baltimore County",
+  DEM_President_Undervotes = 331,
+  DEM_President_Percentage = 331 / 67084 * 100,  # Calculated manually
+  REP_President_Undervotes = 543,
+  REP_President_Percentage = 543 / 27761 * 100, 
+  DEM_Senate_Undervotes = 1107,
+  DEM_Senate_Percentage = 1107 / 67084 * 100,    
+  REP_Senate_Undervotes = 530,
+  REP_Senate_Percentage = 530 / 32915 * 100,    
+  Total_REP_Votes = 27761,  
+  Total_DEM_Votes = 67084, 
+  Percent_DEM_of_Total = 67084 / (67084 + 27761) * 100,
+  stringsAsFactors = FALSE
+)
+
+# Append to the data frame
+undervotes_df <- rbind(undervotes_df, BaltimoreCounty_results)
+
+undervotes_df
+
+
+
+
 ```
 
+Undervote Alleghany
+```{r}
+glimpse(Alleghany)
+
+Alleghany |>
+  filter(
+   `DEM President of the United States (6) (500001630106)` == "undervote" 
+  ) |>
+  summarize(
+    `Race 1` = sum(`DEM President of the United States (6) (500001630106)` == "undervote", na.rm = TRUE),
+  )
+#34 undervotes for dem president
+
+Alleghany |>
+  summarize(
+    `Total DEM (1)` = sum(!is.na(`DEM President of the United States (6) (500001630106)`))
+  )
+#3394	total dem pres votes
+
+Alleghany |>
+  filter(
+  `REP President of the United States (6) (500001630206)`   == "undervote" 
+  ) |>
+  summarize(
+    `Race 1` = sum( `REP President of the United States (6) (500001630206)`   == "undervote", na.rm = TRUE))
+#126 undervotes for rep president
+
+Alleghany |>
+  summarize(
+    `Total rep (1)` = sum(!is.na(`REP President of the United States (6) (500001630206)`))
+  )
+
+
+#7202 total rep primary votes
+
+
+Alleghany |>
+  filter(
+  `DEM U.S. Senator (5000017641)`    == "undervote" ) |>
+  summarize(
+    Count = sum( `DEM U.S. Senator (5000017641)`    == "undervote", na.rm = TRUE)
+  )
+#80 undervotes for dem senates
+
+Alleghany |>
+  summarize(
+    Count = sum(!is.na( `DEM U.S. Senator (5000017641)`   ))
+  )
+#3394	total dem senate votes
+
+Alleghany |>
+  filter(
+  `REP U.S. Senator (5000017642)`  == "undervote" ) |>
+  summarize(
+    Count = sum( `REP U.S. Senator (5000017642)`  == "undervote", na.rm = TRUE)
+  )
+#194	 undervotes for rep senate
+
+Alleghany |>
+  summarize(
+    Count = sum(!is.na( `REP U.S. Senator (5000017642)`))
+  )
+#7202		total rep senate votes
+
+
+Alleghany_results <- data.frame(
+  County = "Alleghany",
+  DEM_President_Undervotes = 34,
+  DEM_President_Percentage = 34 / 3394 * 100,  # Calculated manually
+  REP_President_Undervotes = 126,
+  REP_President_Percentage = 126 / 7202 * 100,  # Calculated manually
+  DEM_Senate_Undervotes = 80,
+  DEM_Senate_Percentage = 80 / 3394 * 100,    # Calculated manually
+  REP_Senate_Undervotes = 194,
+  REP_Senate_Percentage = 194 / 7202 * 100,     # Calculated manually
+  Total_REP_Votes = 7202,  
+  Total_DEM_Votes = 3394, 
+  Percent_DEM_of_Total = 3394 / (3394 + 7202) * 100,
+  stringsAsFactors = FALSE
+)
+
+# Append to the data frame
+undervotes_df <- rbind(undervotes_df, Alleghany_results)
+
+undervotes_df
+
+
+```
+
+AnneArundel undervote
+```{r}
+glimpse(AnneArundel)
+
+AnneArundel |>
+  filter(
+   `DEM President of the United States (3) (500001630103)` == "undervote" |
+    `DEM President of the United States (5) (500001630105)`   == "undervote"
+  ) |>
+  summarize(
+    `Race 1` = sum(`DEM President of the United States (3) (500001630103)` == "undervote", na.rm = TRUE),
+    `Race 2` = sum(`DEM President of the United States (5) (500001630105)` == "undervote", na.rm = TRUE)
+  )
+176	+57
+#233 undervotes for dem president
+
+AnneArundel |>
+  summarize(
+    `Total DEM (1)` = sum(!is.na(`DEM President of the United States (3) (500001630103)`)),
+    `Total DEM (2)` = sum(!is.na(`DEM President of the United States (5) (500001630105)`))
+  )
+38860	+15897	
+#54757	total dem pres votes
+
+AnneArundel |>
+  filter(
+  `REP President of the United States (3) (500001630203)`   == "undervote" |
+    `REP President of the United States (5) (500001630205)`   == "undervote"
+  ) |>
+  summarize(
+    `Race 1` = sum( `REP President of the United States (3) (500001630203)`  == "undervote", na.rm = TRUE),
+    `Race 2` = sum( `REP President of the United States (5) (500001630205)`     == "undervote", na.rm = TRUE))
+654	+249	
+#903 undervotes for rep president
+
+AnneArundel |>
+  summarize(
+    `Total rep (1)` = sum(!is.na( `REP President of the United States (3) (500001630203)`)),
+       `Total rep (2)` = sum(!is.na(`REP President of the United States (5) (500001630205)`))
+  )
+
+26021	+9437	
+#35458 total rep primary votes
+
+
+AnneArundel |>
+  filter(
+  `DEM U.S. Senator (5000017641)`    == "undervote" ) |>
+  summarize(
+    Count = sum( `DEM U.S. Senator (5000017641)`    == "undervote", na.rm = TRUE)
+  )
+#1145 undervotes for dem senates
+
+AnneArundel |>
+  summarize(
+    Count = sum(!is.na( `DEM U.S. Senator (5000017641)`   ))
+  )
+#54757	total dem senate votes
+
+AnneArundel |>
+  filter(
+  `REP U.S. Senator (5000017642)`  == "undervote" ) |>
+  summarize(
+    Count = sum( `REP U.S. Senator (5000017642)`  == "undervote", na.rm = TRUE)
+  )
+#575	 undervotes for rep senate
+
+AnneArundel |>
+  summarize(
+    Count = sum(!is.na( `REP U.S. Senator (5000017642)`))
+  )
+#35458		total rep senate votes
+
+
+AnneArundel_results <- data.frame(
+  County = "Anne Arundel",
+  DEM_President_Undervotes = 233,
+  DEM_President_Percentage = 233 / 54757 * 100,
+  REP_President_Undervotes = 903,
+  REP_President_Percentage = 903 / 35458 * 100, 
+  DEM_Senate_Undervotes = 1145,
+  DEM_Senate_Percentage = 1145 / 54757 * 100, 
+  REP_Senate_Undervotes = 575,
+  REP_Senate_Percentage = 575 / 35458 * 100,     
+  Total_REP_Votes = 35458,  
+  Total_DEM_Votes = 3394, 
+  Percent_DEM_of_Total = 54757 / (54757 + 35458) * 100,
+  stringsAsFactors = FALSE
+)
+
+# Append to the data frame
+undervotes_df <- rbind(undervotes_df, AnneArundel_results)
+
+undervotes_df
+
+
+
+
+
+
+```
+Calvert Undervote
+```{r}
+glimpse(Calvert)
+
+Calvert |>
+  filter(
+    `DEM President of the United States (5) (500001630105)`   == "undervote"
+  ) |>
+  summarize(
+    `Race 2` = sum(`DEM President of the United States (5) (500001630105)` == "undervote", na.rm = TRUE)
+  )
+#59 undervotes for dem president
+
+Calvert |>
+  summarize(
+    `Total DEM (2)` = sum(!is.na(`DEM President of the United States (5) (500001630105)`))
+  )
+#8005	total dem pres votes
+
+Calvert |>
+  filter(
+    `REP President of the United States (5) (500001630205)`   == "undervote"
+  ) |>
+  summarize(
+    `Race 2` = sum( `REP President of the United States (5) (500001630205)`     == "undervote", na.rm = TRUE))
+#185 undervotes for rep president
+
+Calvert |>
+  summarize(
+       `Total rep (2)` = sum(!is.na(`REP President of the United States (5) (500001630205)`))
+  )
+
+#9211 total rep primary votes
+
+
+Calvert |>
+  filter(
+  `DEM U.S. Senator (5000017641)`    == "undervote" ) |>
+  summarize(
+    Count = sum( `DEM U.S. Senator (5000017641)`    == "undervote", na.rm = TRUE)
+  )
+#247 undervotes for dem senates
+
+Calvert |>
+  summarize(
+    Count = sum(!is.na( `DEM U.S. Senator (5000017641)`   ))
+  )
+#8005	total dem senate votes
+
+Calvert |>
+  filter(
+  `REP U.S. Senator (5000017642)`  == "undervote" ) |>
+  summarize(
+    Count = sum( `REP U.S. Senator (5000017642)`  == "undervote", na.rm = TRUE)
+  )
+#213	 undervotes for rep senate
+
+Calvert |>
+  summarize(
+    Count = sum(!is.na( `REP U.S. Senator (5000017642)`))
+  )
+#9211		total rep senate votes
+
+
+Calvert_results <- data.frame(
+  County = "Calvert",
+  DEM_President_Undervotes = 59,
+  DEM_President_Percentage = 59 / 8005 * 100,  
+  REP_President_Undervotes = 185,
+  REP_President_Percentage = 185 / 9211 * 100, 
+  DEM_Senate_Undervotes = 247,
+  DEM_Senate_Percentage = 247 / 8005 * 100,    
+  REP_Senate_Undervotes = 213,
+  REP_Senate_Percentage = 213 / 9211 * 100,     
+  Total_REP_Votes = 9211,  
+  Total_DEM_Votes = 8005, 
+  Percent_DEM_of_Total = 8005 / (8005 + 9211) * 100,
+  stringsAsFactors = FALSE
+)
+
+# Append to the data frame
+undervotes_df <- rbind(undervotes_df, Calvert_results)
+
+undervotes_df
+
+
+
+
+```
+
+
+Caroline Undervote
+```{r}
+glimpse(Caroline)
+
+Caroline |>
+  filter(
+    `DEM President of the United States (1) (500001630101)`     == "undervote"
+  ) |>
+  summarize(
+    `Race 2` = sum(`DEM President of the United States (1) (500001630101)`   == "undervote", na.rm = TRUE)
+  )
+#8	undervotes for dem president
+
+Caroline |>
+  summarize(
+    `Total DEM (2)` = sum(!is.na(`DEM President of the United States (1) (500001630101)`  ))
+  )
+#1351	total dem pres votes
+
+Caroline |>
+  filter(
+   `REP President of the United States (1) (500001630201)`       == "undervote"
+  ) |>
+  summarize(
+    `Race 2` = sum( `REP President of the United States (1) (500001630201)`         == "undervote", na.rm = TRUE))
+#41	 undervotes for rep president
+
+Caroline |>
+  summarize(
+       `Total rep (2)` = sum(!is.na(`REP President of the United States (1) (500001630201)`  ))
+  )
+
+#2651 total rep primary votes
+
+
+Caroline |>
+  filter(
+  `DEM U.S. Senator (5000017641)`    == "undervote" ) |>
+  summarize(
+    Count = sum( `DEM U.S. Senator (5000017641)`    == "undervote", na.rm = TRUE)
+  )
+#39 undervotes for dem senates
+
+Caroline |>
+  summarize(
+    Count = sum(!is.na( `DEM U.S. Senator (5000017641)`   ))
+  )
+#1351	total dem senate votes
+
+Caroline |>
+  filter(
+  `REP U.S. Senator (5000017642)`  == "undervote" ) |>
+  summarize(
+    Count = sum( `REP U.S. Senator (5000017642)`  == "undervote", na.rm = TRUE)
+  )
+#40	 undervotes for rep senate
+
+Caroline |>
+  summarize(
+    Count = sum(!is.na( `REP U.S. Senator (5000017642)`))
+  )
+#2651		total rep senate votes
+
+
+Caroline_results <- data.frame(
+  County = "Caroline",
+  DEM_President_Undervotes = 8,
+  DEM_President_Percentage = 8 / 1351 * 100,  
+  REP_President_Undervotes = 41,
+  REP_President_Percentage = 41 / 2651 * 100, 
+  DEM_Senate_Undervotes = 39,
+  DEM_Senate_Percentage = 39 / 1351 * 100,    
+  REP_Senate_Undervotes = 40,
+  REP_Senate_Percentage = 40 / 2651 * 100,     
+  Total_REP_Votes = 2651,  
+  Total_DEM_Votes = 1351, 
+  Percent_DEM_of_Total = 1351 / (1351 + 2651) * 100,
+  stringsAsFactors = FALSE
+)
+
+# Append to the data frame
+undervotes_df <- rbind(undervotes_df, Caroline_results)
+
+undervotes_df
+
+
+
+
+```
+
+Carroll Undervote
+```{r}
+glimpse(Carroll)
+
+Carroll |>
+  filter(
+    `DEM President of the United States (2) (500001630102)`     == "undervote"|
+      `DEM President of the United States (3) (500001630103)`   == "undervote"
+  ) |>
+  summarize(
+    `Race 1` = sum( `DEM President of the United States (2) (500001630102)`   == "undervote", na.rm = TRUE), 
+    `Race 3` = sum(`DEM President of the United States (3) (500001630103)`  == "undervote", na.rm = TRUE)
+  )
+34	+6	
+#40	undervotes for dem president
+
+Carroll |>
+  summarize(
+    `Total DEM (2)` = sum(!is.na(`DEM President of the United States (2) (500001630102)`  )),
+      `Total DEM (3)` = sum(!is.na(`DEM President of the United States (3) (500001630103)`                     )
+  ))
+9878	+1312	
+#11190	total dem pres votes
+
+Carroll |>
+  filter(
+   `REP President of the United States (2) (500001630202)`         == "undervote" |
+    `REP President of the United States (3) (500001630203)`        == "undervote"
+  ) |>
+  summarize(
+    `Race 2` = sum( `REP President of the United States (2) (500001630202)`          == "undervote", na.rm = TRUE),
+   `Race 3` = sum( `REP President of the United States (3) (500001630203)`        == "undervote", na.rm = TRUE) )
+462	+52	
+#514	 undervotes for rep president
+
+Carroll |>
+  summarize(
+       `Total rep (2)` = sum(!is.na(`REP President of the United States (2) (500001630202)`  )),
+       `Total rep (3)` = sum(!is.na(`REP President of the United States (3) (500001630203)`  )                       )
+  )
+17553	+2244	
+#19797 total rep primary votes
+
+
+Carroll |>
+  filter(
+  `DEM U.S. Senator (5000017641)`    == "undervote" ) |>
+  summarize(
+    Count = sum( `DEM U.S. Senator (5000017641)`    == "undervote", na.rm = TRUE)
+  )
+#288	 undervotes for dem senates
+
+Carroll |>
+  summarize(
+    Count = sum(!is.na( `DEM U.S. Senator (5000017641)`   ))
+  )
+#11190	total dem senate votes
+
+Carroll |>
+  filter(
+  `REP U.S. Senator (5000017642)`  == "undervote" ) |>
+  summarize(
+    Count = sum( `REP U.S. Senator (5000017642)`  == "undervote", na.rm = TRUE)
+  )
+#259	 undervotes for rep senate
+
+Carroll |>
+  summarize(
+    Count = sum(!is.na( `REP U.S. Senator (5000017642)`))
+  )
+#19797		total rep senate votes
+
+
+Carroll_results <- data.frame(
+  County = "Carroll",
+  DEM_President_Undervotes = 40,
+  DEM_President_Percentage = 40 / 11190 * 100,  
+  REP_President_Undervotes = 514,
+  REP_President_Percentage = 514 / 19797 * 100, 
+  DEM_Senate_Undervotes = 288,
+  DEM_Senate_Percentage = 288 / 11190 * 100,    
+  REP_Senate_Undervotes = 259,
+  REP_Senate_Percentage = 259 / 19797 * 100,     
+  Total_REP_Votes = 19797,  
+  Total_DEM_Votes = 11190, 
+  Percent_DEM_of_Total = 11190 / (11190 + 19797) * 100,
+  stringsAsFactors = FALSE
+)
+
+# Append to the data frame
+undervotes_df <- rbind(undervotes_df, Carroll_results)
+
+undervotes_df
+
+
+
+
+```
+Cecil Undervote
+```{r}
+glimpse(Cecil)
+
+Cecil |>
+  filter(
+    `DEM President of the United States (1) (500001630101)`     == "undervote"
+  ) |>
+  summarize(
+    `Race 1` = sum( `DEM President of the United States (1) (500001630101)`    == "undervote", na.rm = TRUE)
+  )
+#42		undervotes for dem president
+
+Cecil |>
+  summarize(
+    `Total DEM (2)` = sum(!is.na(`DEM President of the United States (1) (500001630101)`   ))                     )
+
+#4617	total dem pres votes
+
+Cecil |>
+  filter(
+   `REP President of the United States (1) (500001630201)`        == "undervote" 
+  ) |>
+  summarize(
+    `Race 2` = sum( `REP President of the United States (1) (500001630201)`         == "undervote", na.rm = TRUE) )
+	
+#361		 undervotes for rep president
+
+Cecil |>
+  summarize(
+       `Total rep (2)` = sum(!is.na(`REP President of the United States (1) (500001630201)`  )                      )
+  )
+#14173 total rep primary votes
+
+
+Cecil |>
+  filter(
+  `DEM U.S. Senator (5000017641)`    == "undervote" ) |>
+  summarize(
+    Count = sum( `DEM U.S. Senator (5000017641)`    == "undervote", na.rm = TRUE)
+  )
+#208	 undervotes for dem senates
+
+Cecil |>
+  summarize(
+    Count = sum(!is.na( `DEM U.S. Senator (5000017641)`   ))
+  )
+#4617	total dem senate votes
+
+Cecil |>
+  filter(
+  `REP U.S. Senator (5000017642)`  == "undervote" ) |>
+  summarize(
+    Count = sum( `REP U.S. Senator (5000017642)`  == "undervote", na.rm = TRUE)
+  )
+#658	 undervotes for rep senate
+
+Cecil |>
+  summarize(
+    Count = sum(!is.na( `REP U.S. Senator (5000017642)`))
+  )
+#14173		total rep senate votes
+
+
+Cecil_results <- data.frame(
+  County = "Cecil",
+  DEM_President_Undervotes = 42,
+  DEM_President_Percentage = 42 / 4617 * 100,  
+  REP_President_Undervotes = 361,
+  REP_President_Percentage = 361 / 14173 * 100, 
+  DEM_Senate_Undervotes = 208,
+  DEM_Senate_Percentage = 208 / 4617 * 100,    
+  REP_Senate_Undervotes = 658,
+  REP_Senate_Percentage = 658 / 14173 * 100,     
+  Total_REP_Votes = 14173,  
+  Total_DEM_Votes = 4617, 
+  Percent_DEM_of_Total = 4617 / (4617 + 14173) * 100,
+  stringsAsFactors = FALSE
+)
+
+# Append to the data frame
+undervotes_df <- rbind(undervotes_df, Cecil_results)
+
+undervotes_df
+
+
+
+
+```
+
+Cecil Undervote
+```{r}
+glimpse(Charles)
+
+Charles |>
+  filter(
+    `DEM President of the United States (5) (500001630105)`      == "undervote"
+  ) |>
+  summarize(
+    `Race 1` = sum( `DEM President of the United States (5) (500001630105)`     == "undervote", na.rm = TRUE)
+  )
+#94		undervotes for dem president
+
+Charles |>
+  summarize(
+    `Total DEM (2)` = sum(!is.na(`DEM President of the United States (5) (500001630105)`   ))                     )
+
+#19938	total dem pres votes
+
+Charles |>
+  filter(
+   `REP President of the United States (5) (500001630205)`    == "undervote" 
+  ) |>
+  summarize(
+    `Race 2` = sum( `REP President of the United States (5) (500001630205)`        == "undervote", na.rm = TRUE) )
+	
+#151 undervotes for rep president
+
+Charles |>
+  summarize(
+       `Total rep (2)` = sum(!is.na(`REP President of the United States (5) (500001630205)` )                      )
+  )
+#6141 total rep primary votes
+
+
+Charles |>
+  filter(
+  `DEM U.S. Senator (5000017641)`    == "undervote" ) |>
+  summarize(
+    Count = sum( `DEM U.S. Senator (5000017641)`    == "undervote", na.rm = TRUE)
+  )
+#229	 undervotes for dem senates
+
+Charles |>
+  summarize(
+    Count = sum(!is.na( `DEM U.S. Senator (5000017641)`   ))
+  )
+#19938	total dem senate votes
+
+Charles |>
+  filter(
+  `REP U.S. Senator (5000017642)`  == "undervote" ) |>
+  summarize(
+    Count = sum( `REP U.S. Senator (5000017642)`  == "undervote", na.rm = TRUE)
+  )
+#99	 undervotes for rep senate
+
+Charles |>
+  summarize(
+    Count = sum(!is.na( `REP U.S. Senator (5000017642)`))
+  )
+#6141		total rep senate votes
+
+
+Charles_results <- data.frame(
+  County = "Charles",
+  DEM_President_Undervotes = 94,
+  DEM_President_Percentage = 94 / 19938 * 100,  
+  REP_President_Undervotes = 151,
+  REP_President_Percentage = 151 / 6141 * 100, 
+  DEM_Senate_Undervotes = 229,
+  DEM_Senate_Percentage = 229 / 19938 * 100,    
+  REP_Senate_Undervotes = 99,
+  REP_Senate_Percentage = 99 / 6141 * 100,     
+Total_REP_Votes = 6141,  
+  Total_DEM_Votes = 19938, 
+  Percent_DEM_of_Total = 19938 / (19938 + 6141) * 100,
+  stringsAsFactors = FALSE
+)
+
+
+undervotes_df <- rbind(undervotes_df, Charles_results)
+
+undervotes_df
+
+
+
+
+```
+Dorchester Undervote
+```{r}
+glimpse(Dorchester)
+
+Dorchester |>
+  filter(
+    `DEM President of the United States (1) (500001630101)`     == "undervote"
+  ) |>
+  summarize(
+    `Race 1` = sum( `DEM President of the United States (1) (500001630101)`    == "undervote", na.rm = TRUE)
+  )
+#23			undervotes for dem president
+
+Dorchester |>
+  summarize(
+    `Total DEM (2)` = sum(!is.na(`DEM President of the United States (1) (500001630101)`    ))                     )
+
+#2256	total dem pres votes
+
+Dorchester |>
+  filter(
+   `REP President of the United States (1) (500001630201)`     == "undervote" 
+  ) |>
+  summarize(
+    `Race 2` = sum( `REP President of the United States (1) (500001630201)`     == "undervote", na.rm = TRUE) )
+	
+#55 undervotes for rep president
+
+Dorchester |>
+  summarize(
+       `Total rep (2)` = sum(!is.na(`REP President of the United States (1) (500001630201)`  )                      )
+  )
+#2933 total rep primary votes
+
+
+Dorchester |>
+  filter(
+  `DEM U.S. Senator (5000017641)`    == "undervote" ) |>
+  summarize(
+    Count = sum( `DEM U.S. Senator (5000017641)`    == "undervote", na.rm = TRUE)
+  )
+#79	 undervotes for dem senates
+
+Dorchester |>
+  summarize(
+    Count = sum(!is.na( `DEM U.S. Senator (5000017641)`   ))
+  )
+#2256	total dem senate votes
+
+Dorchester |>
+  filter(
+  `REP U.S. Senator (5000017642)`  == "undervote" ) |>
+  summarize(
+    Count = sum( `REP U.S. Senator (5000017642)`  == "undervote", na.rm = TRUE)
+  )
+#61	 undervotes for rep senate
+
+Dorchester |>
+  summarize(
+    Count = sum(!is.na( `REP U.S. Senator (5000017642)`))
+  )
+#2933		total rep senate votes
+
+
+Dorchester_results <- data.frame(
+  County = "Dorchester",
+  DEM_President_Undervotes = 23,
+  DEM_President_Percentage = 23 / 2256 * 100,  
+  REP_President_Undervotes = 55,
+  REP_President_Percentage = 55 / 2933 * 100, 
+  DEM_Senate_Undervotes = 79,
+  DEM_Senate_Percentage = 79 / 2256 * 100,    
+  REP_Senate_Undervotes = 61,
+  REP_Senate_Percentage = 61 / 2933 * 100,     
+Total_REP_Votes = 2933,  
+  Total_DEM_Votes = 2256, 
+  Percent_DEM_of_Total = 2256 / (2256 + 2933) * 100,
+  stringsAsFactors = FALSE
+)
+
+
+undervotes_df <- rbind(undervotes_df, Dorchester_results)
+
+undervotes_df
+
+
+```
+
+Garrett Undervote
+```{r}
+glimpse(Garrett)
+
+Garrett |>
+  filter(
+    `DEM President of the United States (6) (500001630106)`      == "undervote"
+  ) |>
+  summarize(
+    `Race 1` = sum( `DEM President of the United States (6) (500001630106)`      == "undervote", na.rm = TRUE)
+  )
+#12			undervotes for dem president
+
+Garrett |>
+  summarize(
+    `Total DEM (2)` = sum(!is.na(`DEM President of the United States (6) (500001630106)`     ))                     )
+
+#1303	total dem pres votes
+
+Garrett |>
+  filter(
+   `REP President of the United States (6) (500001630206)`       == "undervote" 
+  ) |>
+  summarize(
+    `Race 2` = sum( `REP President of the United States (6) (500001630206)`    == "undervote", na.rm = TRUE) )
+	
+#81 undervotes for rep president
+
+Garrett |>
+  summarize(
+       `Total rep (2)` = sum(!is.na(`REP President of the United States (6) (500001630206)` )                      )
+  )
+#4609 total rep primary votes
+
+
+Garrett |>
+  filter(
+  `DEM U.S. Senator (5000017641)`    == "undervote" ) |>
+  summarize(
+    Count = sum( `DEM U.S. Senator (5000017641)`    == "undervote", na.rm = TRUE)
+  )
+#32	 undervotes for dem senates
+
+Garrett |>
+  summarize(
+    Count = sum(!is.na( `DEM U.S. Senator (5000017641)`   ))
+  )
+#1303	total dem senate votes
+
+Garrett |>
+  filter(
+  `REP U.S. Senator (5000017642)`  == "undervote" ) |>
+  summarize(
+    Count = sum( `REP U.S. Senator (5000017642)`  == "undervote", na.rm = TRUE)
+  )
+#108	 undervotes for rep senate
+
+Garrett |>
+  summarize(
+    Count = sum(!is.na( `REP U.S. Senator (5000017642)`))
+  )
+#4609		total rep senate votes
+
+
+Garrett_results <- data.frame(
+  County = "Garrett",
+  DEM_President_Undervotes = 12,
+  DEM_President_Percentage = 12 / 1303 * 100,  
+  REP_President_Undervotes = 81,
+  REP_President_Percentage = 81 / 4609 * 100, 
+  DEM_Senate_Undervotes = 32,
+  DEM_Senate_Percentage = 32 / 1303 * 100,    
+  REP_Senate_Undervotes = 108,
+  REP_Senate_Percentage = 108 / 4609 * 100,     
+Total_REP_Votes = 4609,  
+  Total_DEM_Votes = 1303, 
+  Percent_DEM_of_Total = 1303 / (1303 + 4609) * 100,
+  stringsAsFactors = FALSE
+)
+
+
+undervotes_df <- rbind(undervotes_df, Garrett_results)
+
+undervotes_df
+
+
+```
+Harford Undervote
+```{r}
+glimpse(Harford)
+
+Harford |>
+  filter(
+    `DEM President of the United States (1) (500001630101)`      == "undervote"
+  ) |>
+  summarize(
+    `Race 1` = sum( `DEM President of the United States (1) (500001630101)`        == "undervote", na.rm = TRUE)
+  )
+#73			undervotes for dem president
+
+Harford |>
+  summarize(
+    `Total DEM (2)` = sum(!is.na(`DEM President of the United States (1) (500001630101)`    ))                     )
+
+#18055	total dem pres votes
+
+Harford |>
+  filter(
+  `REP President of the United States (1) (500001630201)`      == "undervote" 
+  ) |>
+  summarize(
+    `Race 2` = sum( `REP President of the United States (1) (500001630201)`   == "undervote", na.rm = TRUE) )
+	
+#458 undervotes for rep president
+
+Harford |>
+  summarize(
+       `Total rep (2)` = sum(!is.na(`REP President of the United States (1) (500001630201)`)                      )
+  )
+#24970 total rep primary votes
+
+
+Harford |>
+  filter(
+  `DEM U.S. Senator (5000017641)`    == "undervote" ) |>
+  summarize(
+    Count = sum( `DEM U.S. Senator (5000017641)`    == "undervote", na.rm = TRUE)
+  )
+#410	 undervotes for dem senates
+
+Harford |>
+  summarize(
+    Count = sum(!is.na( `DEM U.S. Senator (5000017641)`   ))
+  )
+#18055	total dem senate votes
+
+Harford |>
+  filter(
+  `REP U.S. Senator (5000017642)`  == "undervote" ) |>
+  summarize(
+    Count = sum( `REP U.S. Senator (5000017642)`  == "undervote", na.rm = TRUE)
+  )
+#421	 undervotes for rep senate
+
+Harford |>
+  summarize(
+    Count = sum(!is.na( `REP U.S. Senator (5000017642)`))
+  )
+#24970		total rep senate votes
+
+
+Harford_results <- data.frame(
+  County = "Harford",
+  DEM_President_Undervotes = 73,
+  DEM_President_Percentage = 73 / 18055 * 100,  
+  REP_President_Undervotes = 458,
+  REP_President_Percentage = 458 / 24970 * 100, 
+  DEM_Senate_Undervotes = 410,
+  DEM_Senate_Percentage = 410 / 18055 * 100,    
+  REP_Senate_Undervotes = 421,
+  REP_Senate_Percentage = 421 / 24970 * 100,     
+Total_REP_Votes = 24970,  
+  Total_DEM_Votes = 18055, 
+  Percent_DEM_of_Total = 18055 / (18055 + 24970) * 100,
+  stringsAsFactors = FALSE
+)
+
+
+undervotes_df <- rbind(undervotes_df, Harford_results)
+
+undervotes_df
+
+
+```
+
+Kent Undervote
+```{r}
+glimpse(Kent)
+
+Kent |>
+  filter(
+    `DEM President of the United States (1) (500001630101)`      == "undervote"
+  ) |>
+  summarize(
+    `Race 1` = sum( `DEM President of the United States (1) (500001630101)`        == "undervote", na.rm = TRUE)
+  )
+#15	undervotes for dem president
+
+Kent |>
+  summarize(
+    `Total DEM (2)` = sum(!is.na(`DEM President of the United States (1) (500001630101)`    ))                     )
+
+#2090	total dem pres votes
+
+Kent |>
+  filter(
+  `REP President of the United States (1) (500001630201)`      == "undervote" 
+  ) |>
+  summarize(
+    `Race 2` = sum( `REP President of the United States (1) (500001630201)`   == "undervote", na.rm = TRUE) )
+	
+#46 undervotes for rep president
+
+Kent |>
+  summarize(
+       `Total rep (2)` = sum(!is.na(`REP President of the United States (1) (500001630201)`)                      )
+  )
+#1856 total rep primary votes
+
+
+Kent |>
+  filter(
+  `DEM U.S. Senator (5000017641)`    == "undervote" ) |>
+  summarize(
+    Count = sum( `DEM U.S. Senator (5000017641)`    == "undervote", na.rm = TRUE)
+  )
+#52	 undervotes for dem senates
+
+Kent |>
+  summarize(
+    Count = sum(!is.na( `DEM U.S. Senator (5000017641)`   ))
+  )
+#2090	total dem senate votes
+
+Kent |>
+  filter(
+  `REP U.S. Senator (5000017642)`  == "undervote" ) |>
+  summarize(
+    Count = sum( `REP U.S. Senator (5000017642)`  == "undervote", na.rm = TRUE)
+  )
+#19	 undervotes for rep senate
+
+Kent |>
+  summarize(
+    Count = sum(!is.na( `REP U.S. Senator (5000017642)`))
+  )
+#1856		total rep senate votes
+
+
+
+Kent_results <- data.frame(
+  County = "Kent",
+  DEM_President_Undervotes = 15,
+  DEM_President_Percentage = 15 / 2090 * 100,  
+  REP_President_Undervotes = 46,
+  REP_President_Percentage = 46 / 1856 * 100, 
+  DEM_Senate_Undervotes = 52,
+  DEM_Senate_Percentage = 52 / 2090 * 100,    
+  REP_Senate_Undervotes = 19,
+  REP_Senate_Percentage = 19 / 1856 * 100,     
+Total_REP_Votes = 1856,  
+  Total_DEM_Votes = 2090, 
+  Percent_DEM_of_Total = 2090 / (2090 + 1856) * 100,
+  stringsAsFactors = FALSE
+)
+
+
+undervotes_df <- rbind(undervotes_df, Kent_results)
+
+undervotes_df
+
+
+```
+
+
+PG Undervote
+```{r}
+glimpse(PG)
+
+PG |>
+  filter(
+    `DEM President of the United States (4) (500001630104)`     == "undervote" |
+      `DEM President of the United States (5) (500001630105)`   == "undervote"|
+      `DEM President of the United States (8) (500001630108)`        == "undervote"
+  ) |>
+  summarize(
+    `Race 4` = sum( `DEM President of the United States (4) (500001630104)`          == "undervote", na.rm = TRUE),
+    `Race 5` = sum( `DEM President of the United States (5) (500001630105)`       == "undervote", na.rm = TRUE),
+    `Race 8` = sum( `DEM President of the United States (8) (500001630108)`         == "undervote", na.rm = TRUE)
+  )
+
+241	+137+	0	
+#378	undervotes for dem president
+
+PG |>
+  summarize(
+    `Total DEM (4)` = sum(!is.na(`DEM President of the United States (4) (500001630104)`     )),
+        `Total DEM (5)` = sum(!is.na( `DEM President of the United States (5) (500001630105)`  ) ),
+           `Total DEM (8)` = sum(!is.na(`DEM President of the United States (8) (500001630108)`       ))           )
+56501 +	35699	+0	
+#92200	total dem pres votes
+
+PG |>
+  filter(
+    `REP President of the United States (4) (500001630204)`      == "undervote" |
+      `REP President of the United States (5) (500001630205)`    == "undervote"|
+      `REP President of the United States (8) (500001630208)`    == "undervote"
+  ) |>
+  summarize(
+    `Race 4` = sum( `REP President of the United States (4) (500001630204)`           == "undervote", na.rm = TRUE),
+    `Race 5` = sum( `REP President of the United States (5) (500001630205)`      == "undervote", na.rm = TRUE),
+    `Race 8` = sum( `REP President of the United States (8) (500001630208)`          == "undervote", na.rm = TRUE)
+  )
+141	+101+	0		
+#242 undervotes for rep president
+
+PG |>
+  summarize(
+    `Total Rep (4)` = sum(!is.na(`REP President of the United States (4) (500001630204)`     )),
+        `Total Rep (5)` = sum(!is.na( `REP President of the United States (5) (500001630205)`  ) ),
+           `Total Rep (8)` = sum(!is.na(`REP President of the United States (8) (500001630208)`       ))           )
+3699	+2459+	0	
+#6158 total rep primary votes
+
+
+PG |>
+  filter(
+  `DEM U.S. Senator (5000017641)`    == "undervote" ) |>
+  summarize(
+    Count = sum( `DEM U.S. Senator (5000017641)`    == "undervote", na.rm = TRUE)
+  )
+#520		 undervotes for dem senates
+
+PG |>
+  summarize(
+    Count = sum(!is.na( `DEM U.S. Senator (5000017641)`   ))
+  )
+#92202	total dem senate votes
+
+PG |>
+  filter(
+  `REP U.S. Senator (5000017642)`  == "undervote" ) |>
+  summarize(
+    Count = sum( `REP U.S. Senator (5000017642)`  == "undervote", na.rm = TRUE)
+  )
+#146	 undervotes for rep senate
+
+PG |>
+  summarize(
+    Count = sum(!is.na( `REP U.S. Senator (5000017642)`))
+  )
+#6158		total rep senate votes
+
+
+PG_results <- data.frame(
+  County = "Prince George's",
+  DEM_President_Undervotes = 378,
+  DEM_President_Percentage = 378 / 92200 * 100,  
+  REP_President_Undervotes = 242,
+  REP_President_Percentage = 242 / 6158 * 100, 
+  DEM_Senate_Undervotes = 520,
+  DEM_Senate_Percentage = 520 / 92202 * 100,    
+  REP_Senate_Undervotes = 146,
+  REP_Senate_Percentage = 146 / 6158 * 100,     
+Total_REP_Votes = 6158,  
+  Total_DEM_Votes = 92200, 
+  Percent_DEM_of_Total = 92200 / (92200 + 6158) * 100,
+  stringsAsFactors = FALSE
+)
+
+
+undervotes_df <- rbind(undervotes_df, PG_results)
+
+undervotes_df
+
+
+```
+
+QueenAnnes Undervote
+```{r}
+glimpse(QueenAnnes)
+
+QueenAnnes |>
+  filter(
+    `DEM President of the United States (1) (500001630101)`       == "undervote"
+  ) |>
+  summarize(
+    `Race 4` = sum( `DEM President of the United States (1) (500001630101)`   == "undervote", na.rm = TRUE)
+  )
+
+#15	undervotes for dem president
+
+QueenAnnes |>
+  summarize(
+    `Total DEM (4)` = sum(!is.na(`DEM President of the United States (1) (500001630101)`  ))           )
+#3579		total dem pres votes
+
+QueenAnnes |>
+  filter(
+    `REP President of the United States (1) (500001630201)`      == "undervote" 
+  ) |>
+  summarize(
+    `Race 4` = sum( `REP President of the United States (1) (500001630201)`        == "undervote", na.rm = TRUE)
+  )
+#89	 undervotes for rep president
+
+QueenAnnes |>
+  summarize(
+    `Total Rep (4)` = sum(!is.na(`REP President of the United States (1) (500001630201)`    ))           )
+#5996 total rep primary votes
+
+
+QueenAnnes |>
+  filter(
+  `DEM U.S. Senator (5000017641)`    == "undervote" ) |>
+  summarize(
+    Count = sum( `DEM U.S. Senator (5000017641)`    == "undervote", na.rm = TRUE)
+  )
+#79		 undervotes for dem senates
+
+QueenAnnes |>
+  summarize(
+    Count = sum(!is.na( `DEM U.S. Senator (5000017641)`   ))
+  )
+#3579	total dem senate votes
+
+QueenAnnes |>
+  filter(
+  `REP U.S. Senator (5000017642)`  == "undervote" ) |>
+  summarize(
+    Count = sum( `REP U.S. Senator (5000017642)`  == "undervote", na.rm = TRUE)
+  )
+#82	 undervotes for rep senate
+
+QueenAnnes |>
+  summarize(
+    Count = sum(!is.na( `REP U.S. Senator (5000017642)`))
+  )
+#5996		total rep senate votes
+
+
+QueenAnnes_results <- data.frame(
+  County = "Queen Anne's",
+  DEM_President_Undervotes = 15,
+  DEM_President_Percentage = 15 / 3579 * 100,  
+  REP_President_Undervotes = 89,
+  REP_President_Percentage = 89 / 5996 * 100, 
+  DEM_Senate_Undervotes = 79,
+  DEM_Senate_Percentage = 79 / 3579 * 100,    
+  REP_Senate_Undervotes = 82,
+  REP_Senate_Percentage = 82 / 5996 * 100,     
+Total_REP_Votes = 5996,  
+  Total_DEM_Votes = 3579, 
+  Percent_DEM_of_Total = 3579 / (3579 + 5996) * 100,
+  stringsAsFactors = FALSE
+)
+
+
+undervotes_df <- rbind(undervotes_df, QueenAnnes_results)
+
+undervotes_df
+
+
+```
+
+StMarys Undervote
+```{r}
+glimpse(StMarys)
+
+StMarys |>
+  filter(
+    `DEM President of the United States (5) (500001630105)`  == "undervote"
+  ) |>
+  summarize(
+    `Race 4` = sum( `DEM President of the United States (5) (500001630105)`   == "undervote", na.rm = TRUE)
+  )
+
+#86		undervotes for dem president
+
+StMarys |>
+  summarize(
+    `Total DEM (4)` = sum(!is.na(`DEM President of the United States (5) (500001630105)` ))           )
+#7464		total dem pres votes
+
+StMarys |>
+  filter(
+    `REP President of the United States (5) (500001630205)`     == "undervote" 
+  ) |>
+  summarize(
+    `Race 4` = sum( `REP President of the United States (5) (500001630205)`     == "undervote", na.rm = TRUE)
+  )
+#263	 undervotes for rep president
+
+StMarys |>
+  summarize(
+    `Total Rep (4)` = sum(!is.na(`REP President of the United States (5) (500001630205)`  ))           )
+#10936 total rep primary votes
+
+
+StMarys |>
+  filter(
+  `DEM U.S. Senator (5000017641)`    == "undervote" ) |>
+  summarize(
+    Count = sum( `DEM U.S. Senator (5000017641)`    == "undervote", na.rm = TRUE)
+  )
+#329		 undervotes for dem senates
+
+StMarys |>
+  summarize(
+    Count = sum(!is.na( `DEM U.S. Senator (5000017641)`   ))
+  )
+#7464	total dem senate votes
+
+StMarys |>
+  filter(
+  `REP U.S. Senator (5000017642)`  == "undervote" ) |>
+  summarize(
+    Count = sum( `REP U.S. Senator (5000017642)`  == "undervote", na.rm = TRUE)
+  )
+#237	 undervotes for rep senate
+
+StMarys |>
+  summarize(
+    Count = sum(!is.na( `REP U.S. Senator (5000017642)`))
+  )
+#10936		total rep senate votes
+
+
+StMarys_results <- data.frame(
+  County = "Saint Mary's",
+  DEM_President_Undervotes = 86,
+  DEM_President_Percentage = 86 / 7464 * 100,  
+  REP_President_Undervotes = 263,
+  REP_President_Percentage = 263 / 10936 * 100, 
+  DEM_Senate_Undervotes = 329,
+  DEM_Senate_Percentage = 329 / 7464 * 100,    
+  REP_Senate_Undervotes = 237,
+  REP_Senate_Percentage = 237 / 10936 * 100,     
+  Total_REP_Votes = 10936,  
+  Total_DEM_Votes = 7464, 
+  Percent_DEM_of_Total = 7464 / (7464 + 10936) * 100,
+  stringsAsFactors = FALSE
+)
+
+
+undervotes_df <- rbind(undervotes_df, StMarys_results)
+
+undervotes_df
+
+
+```
+
+
+Somerset Undervote
+```{r}
+glimpse(Somerset)
+
+Somerset |>
+  filter(
+    `DEM President of the United States (1) (500001630101)`   == "undervote"
+  ) |>
+  summarize(
+    `Race 4` = sum(`DEM President of the United States (1) (500001630101)`   == "undervote", na.rm = TRUE)
+  )
+
+#8 undervotes for dem president
+
+Somerset |>
+  summarize(
+    `Total DEM (4)` = sum(!is.na(`DEM President of the United States (1) (500001630101)`  ))           )
+#999	total dem pres votes
+
+Somerset |>
+  filter(
+    `REP President of the United States (1) (500001630201)`  == "undervote" 
+  ) |>
+  summarize(
+    `Race 4` = sum( `REP President of the United States (1) (500001630201)`       == "undervote", na.rm = TRUE)
+  )
+#27	undervotes for rep president
+
+Somerset |>
+  summarize(
+    `Total Rep (4)` = sum(!is.na(`REP President of the United States (1) (500001630201)`))     )
+#1752 total rep primary votes
+
+
+Somerset |>
+  filter(
+  `DEM U.S. Senator (5000017641)`    == "undervote" ) |>
+  summarize(
+    Count = sum( `DEM U.S. Senator (5000017641)`    == "undervote", na.rm = TRUE)
+  )
+#36 undervotes for dem senates
+
+Somerset |>
+  summarize(
+    Count = sum(!is.na( `DEM U.S. Senator (5000017641)`   ))
+  )
+#999	total dem senate votes
+
+Somerset |>
+  filter(
+  `REP U.S. Senator (5000017642)`  == "undervote" ) |>
+  summarize(
+    Count = sum( `REP U.S. Senator (5000017642)`  == "undervote", na.rm = TRUE)
+  )
+#21	 undervotes for rep senate
+
+Somerset |>
+  summarize(
+    Count = sum(!is.na( `REP U.S. Senator (5000017642)`))
+  )
+#1752		total rep senate votes
+
+
+
+Somerset_results <- data.frame(
+  County = "Somerset",
+  DEM_President_Undervotes = 8,
+  DEM_President_Percentage = 8 / 999 * 100,  
+  REP_President_Undervotes = 27,
+  REP_President_Percentage = 27 / 1752 * 100, 
+  DEM_Senate_Undervotes = 36,
+  DEM_Senate_Percentage = 36 / 999 * 100,    
+  REP_Senate_Undervotes = 21,
+  REP_Senate_Percentage = 21 / 1752 * 100,     
+ Total_REP_Votes = 1752,  
+  Total_DEM_Votes = 999, 
+  Percent_DEM_of_Total = 999 / (999 + 1752) * 100,
+  stringsAsFactors = FALSE
+)
+
+
+undervotes_df <- rbind(undervotes_df, Somerset_results)
+
+undervotes_df
+
+
+```
+
+
+Talbot Undervote
+```{r}
+glimpse(Talbot)
+
+Talbot |>
+  filter(
+    `DEM President of the United States (1) (500001630101)`   == "undervote"
+  ) |>
+  summarize(
+    `Race 4` = sum(`DEM President of the United States (1) (500001630101)`   == "undervote", na.rm = TRUE)
+  )
+
+#19 undervotes for dem president
+
+Talbot |>
+  summarize(
+    `Total DEM (4)` = sum(!is.na(`DEM President of the United States (1) (500001630101)`  ))           )
+#3920	total dem pres votes
+
+Talbot |>
+  filter(
+    `REP President of the United States (1) (500001630201)`  == "undervote" 
+  ) |>
+  summarize(
+    `Race 4` = sum( `REP President of the United States (1) (500001630201)`       == "undervote", na.rm = TRUE)
+  )
+#93	undervotes for rep president
+
+Talbot |>
+  summarize(
+    `Total Rep (4)` = sum(!is.na(`REP President of the United States (1) (500001630201)`))     )
+#3940 total rep primary votes
+
+
+Talbot |>
+  filter(
+  `DEM U.S. Senator (5000017641)`    == "undervote" ) |>
+  summarize(
+    Count = sum( `DEM U.S. Senator (5000017641)`    == "undervote", na.rm = TRUE)
+  )
+#83 undervotes for dem senates
+
+Talbot |>
+  summarize(
+    Count = sum(!is.na( `DEM U.S. Senator (5000017641)`   ))
+  )
+#3920	total dem senate votes
+
+Talbot |>
+  filter(
+  `REP U.S. Senator (5000017642)`  == "undervote" ) |>
+  summarize(
+    Count = sum( `REP U.S. Senator (5000017642)`  == "undervote", na.rm = TRUE)
+  )
+#46	 undervotes for rep senate
+
+Talbot |>
+  summarize(
+    Count = sum(!is.na( `REP U.S. Senator (5000017642)`))
+  )
+#3940		total rep senate votes
+
+
+Talbot_results <- data.frame(
+  County = "Talbot",
+  DEM_President_Undervotes = 19,
+  DEM_President_Percentage = 19 / 3920 * 100,  
+  REP_President_Undervotes = 93,
+  REP_President_Percentage = 93 / 3940 * 100, 
+  DEM_Senate_Undervotes = 83,
+  DEM_Senate_Percentage = 83 / 3920 * 100,    
+  REP_Senate_Undervotes = 46,
+  REP_Senate_Percentage = 46 / 3940 * 100,     
+  Total_REP_Votes = 3940,  
+  Total_DEM_Votes = 3920, 
+  Percent_DEM_of_Total = 3920 / (3920 + 3940) * 100,
+  stringsAsFactors = FALSE
+)
+
+
+undervotes_df <- rbind(undervotes_df, Talbot_results)
+
+undervotes_df
+
+
+```
+
+Washington Undervote
+```{r}
+glimpse(Washington)
+
+Washington |>
+  filter(
+    `DEM President of the United States (6) (500001630106)`    == "undervote"
+  ) |>
+  summarize(
+    `Race 4` = sum(`DEM President of the United States (6) (500001630106)`   == "undervote", na.rm = TRUE)
+  )
+
+#122	 undervotes for dem president
+
+Washington |>
+  summarize(
+    `Total DEM (4)` = sum(!is.na(`DEM President of the United States (6) (500001630106)`  ))           )
+#8980	total dem pres votes
+
+Washington |>
+  filter(
+    `REP President of the United States (6) (500001630206)`    == "undervote" 
+  ) |>
+  summarize(
+    `Race 4` = sum( `REP President of the United States (6) (500001630206)`       == "undervote", na.rm = TRUE)
+  )
+#355		undervotes for rep president
+
+Washington |>
+  summarize(
+    `Total Rep (4)` = sum(!is.na(`REP President of the United States (6) (500001630206)`  ))     )
+#14039 total rep primary votes
+
+
+Washington |>
+  filter(
+  `DEM U.S. Senator (5000017641)`    == "undervote" ) |>
+  summarize(
+    Count = sum( `DEM U.S. Senator (5000017641)`    == "undervote", na.rm = TRUE)
+  )
+#246 undervotes for dem senates
+
+Washington |>
+  summarize(
+    Count = sum(!is.na( `DEM U.S. Senator (5000017641)`   ))
+  )
+#8980	total dem senate votes
+
+Washington |>
+  filter(
+  `REP U.S. Senator (5000017642)`  == "undervote" ) |>
+  summarize(
+    Count = sum( `REP U.S. Senator (5000017642)`  == "undervote", na.rm = TRUE)
+  )
+#448	 undervotes for rep senate
+
+Washington |>
+  summarize(
+    Count = sum(!is.na( `REP U.S. Senator (5000017642)`))
+  )
+#14039		total rep senate votes
+
+
+Washington_results <- data.frame(
+  County = "Washington",
+  DEM_President_Undervotes = 122,
+  DEM_President_Percentage = 122 / 8980 * 100,  
+  REP_President_Undervotes = 355,
+  REP_President_Percentage = 355 / 14039 * 100, 
+  DEM_Senate_Undervotes = 246,
+  DEM_Senate_Percentage = 246 / 8980 * 100,    
+  REP_Senate_Undervotes = 448,
+  REP_Senate_Percentage = 448 / 14039 * 100,     
+  Total_REP_Votes = 14039,  
+  Total_DEM_Votes = 8980, 
+  Percent_DEM_of_Total = 8980 / (8980 + 14039) * 100,
+  stringsAsFactors = FALSE
+)
+
+
+undervotes_df <- rbind(undervotes_df, Washington_results)
+
+undervotes_df
+
+
+```
+
+
+Wicomico Undervote
+```{r}
+glimpse(Wicomico)
+
+Wicomico |>
+  filter(
+    `DEM President of the United States (1) (500001630101)`    == "undervote"
+  ) |>
+  summarize(
+    `Race 4` = sum(`DEM President of the United States (1) (500001630101)`   == "undervote", na.rm = TRUE)
+  )
+
+#32		 undervotes for dem president
+
+Wicomico |>
+  summarize(
+    `Total DEM (4)` = sum(!is.na(`DEM President of the United States (1) (500001630101)`  ))           )
+#5637	total dem pres votes
+
+Wicomico |>
+  filter(
+    `REP President of the United States (1) (500001630201)`    == "undervote" 
+  ) |>
+  summarize(
+    `Race 4` = sum( `REP President of the United States (1) (500001630201)`     == "undervote", na.rm = TRUE)
+  )
+#140		undervotes for rep president
+
+Wicomico |>
+  summarize(
+    `Total Rep (4)` = sum(!is.na(`REP President of the United States (1) (500001630201)`   ))     )
+#6739 total rep primary votes
+
+
+Wicomico |>
+  filter(
+  `DEM U.S. Senator (5000017641)`    == "undervote" ) |>
+  summarize(
+    Count = sum( `DEM U.S. Senator (5000017641)`    == "undervote", na.rm = TRUE)
+  )
+#194 undervotes for dem senates
+
+Wicomico |>
+  summarize(
+    Count = sum(!is.na( `DEM U.S. Senator (5000017641)`   ))
+  )
+#5637	total dem senate votes
+
+Wicomico |>
+  filter(
+  `REP U.S. Senator (5000017642)`  == "undervote" ) |>
+  summarize(
+    Count = sum( `REP U.S. Senator (5000017642)`  == "undervote", na.rm = TRUE)
+  )
+#72	 undervotes for rep senate
+
+Wicomico |>
+  summarize(
+    Count = sum(!is.na( `REP U.S. Senator (5000017642)`))
+  )
+#6739		total rep senate votes
+
+
+Wicomico_results <- data.frame(
+  County = "Wicomico",
+  DEM_President_Undervotes = 32,
+  DEM_President_Percentage = 32 / 5637 * 100,  
+  REP_President_Undervotes = 140,
+  REP_President_Percentage = 140 / 6739 * 100, 
+  DEM_Senate_Undervotes = 194,
+  DEM_Senate_Percentage = 194 / 5637 * 100,    
+  REP_Senate_Undervotes = 72,
+  REP_Senate_Percentage = 72 / 6739 * 100,     
+  Total_REP_Votes = 6739,  
+  Total_DEM_Votes = 5637, 
+  Percent_DEM_of_Total = 5637 / (5637 + 6739) * 100,
+  stringsAsFactors = FALSE
+)
+
+
+undervotes_df <- rbind(undervotes_df, Wicomico_results)
+
+undervotes_df
+
+
+```
+
+
+Worcester Undervote
+```{r}
+glimpse(Worcester)
+
+Worcester |>
+  filter(
+    `DEM President of the United States (1) (500001630101)`    == "undervote"
+  ) |>
+  summarize(
+    `Race 4` = sum(`DEM President of the United States (1) (500001630101)`   == "undervote", na.rm = TRUE)
+  )
+
+#16		 undervotes for dem president
+
+Worcester |>
+  summarize(
+    `Total DEM (4)` = sum(!is.na(`DEM President of the United States (1) (500001630101)`  ))           )
+#3947	total dem pres votes
+
+Worcester |>
+  filter(
+    `REP President of the United States (1) (500001630201)`    == "undervote" 
+  ) |>
+  summarize(
+    `Race 4` = sum( `REP President of the United States (1) (500001630201)`     == "undervote", na.rm = TRUE)
+  )
+#135		undervotes for rep president
+
+Worcester |>
+  summarize(
+    `Total Rep (4)` = sum(!is.na(`REP President of the United States (1) (500001630201)`   ))     )
+#6247 total rep primary votes
+
+
+Worcester |>
+  filter(
+  `DEM U.S. Senator (5000017641)`    == "undervote" ) |>
+  summarize(
+    Count = sum( `DEM U.S. Senator (5000017641)`    == "undervote", na.rm = TRUE)
+  )
+#	208 undervotes for dem senates
+
+Worcester |>
+  summarize(
+    Count = sum(!is.na( `DEM U.S. Senator (5000017641)`   ))
+  )
+#3947	total dem senate votes
+
+Worcester |>
+  filter(
+  `REP U.S. Senator (5000017642)`  == "undervote" ) |>
+  summarize(
+    Count = sum( `REP U.S. Senator (5000017642)`  == "undervote", na.rm = TRUE)
+  )
+#82	 undervotes for rep senate
+
+Worcester |>
+  summarize(
+    Count = sum(!is.na( `REP U.S. Senator (5000017642)`))
+  )
+#6247		total rep senate votes
+
+
+Worcester_results <- data.frame(
+  County = "Worcester",
+  DEM_President_Undervotes = 16,
+  DEM_President_Percentage = 16 / 3947 * 100,  
+  REP_President_Undervotes = 135,
+  REP_President_Percentage = 135 / 6247 * 100, 
+  DEM_Senate_Undervotes = 208,
+  DEM_Senate_Percentage = 208 / 3947 * 100,    
+  REP_Senate_Undervotes = 82,
+  REP_Senate_Percentage = 82 / 6247 * 100,     
+  Total_REP_Votes = 6247,  
+  Total_DEM_Votes = 3947, 
+  Percent_DEM_of_Total = 3947 / (3947 + 6247) * 100,
+  stringsAsFactors = FALSE
+)
+
+
+undervotes_df <- rbind(undervotes_df, Worcester_results)
+
+undervotes_df
+
+
+```
+
+
+```{r}
+library(tigris)
+library(ggplot2)
+library(sf)
+counties <- counties()
+
+glimpse(counties)
+md_counties <- counties |>
+  filter(STATEFP == "24")
+
+glimpse(md_counties)
+glimpse(undervotes_df)
+  
+  md_counties$NAME
+  undervotes_df$County
+  
+  library(dplyr)
+
+undervotes_df <- undervotes_df %>%
+  mutate(Difference_Undervotes_pres = REP_President_Percentage -DEM_President_Percentage
+                                  )
+
+
+ undervotes_df <- undervotes_df %>%
+  mutate(County = case_when(
+    County == "Alleghany" ~ "Allegany",  
+    County == "Anne Arundel" ~ "Anne Arundel",  
+    County == "Saint Mary's" ~ "St. Mary's",    
+    County == "Baltimore City" ~ "Baltimore City",  
+    County == "Baltimore County" ~ "Baltimore", 
+    TRUE ~ County  # Keep other names as is
+  ))
+ undervotemap <- md_counties %>%
+  left_join(undervotes_df, by = c("NAME" = "County"))
+ 
+  ggplot(data = undervotemap) +
+  geom_sf(aes(fill = REP_President_Percentage)) + 
+  scale_fill_viridis_c(option = "magma") +  
+  theme_minimal() +                         
+  labs(
+    title = "Republican Presidential Undervote Percentage by County",
+    fill = "Rep % Undervotes"
+  )
+  
+    ggplot(data = undervotemap) +
+  geom_sf(aes(fill = DEM_President_Percentage)) + 
+  scale_fill_viridis_c(option = "magma") +  
+  theme_minimal() +                         
+  labs(
+    title = "Democratic Presidential Undervote Percentage by County",
+    fill = "Dem % Undervotes"
+  )
+ 
+  
+  ggplot(data = undervotemap) +
+  geom_sf(aes(fill = Percent_DEM_of_Total)) + 
+  scale_fill_viridis_c(option = "magma") +  
+  theme_minimal() +                         
+  labs(
+    title = "Percentage of Democratic Voters that Voted in Primary",
+    fill = "Dem % Votes"
+  )
+  
+  
+   ggplot(data = undervotemap) +
+  geom_sf(aes(fill = Difference_Undervotes_pres)) + 
+  scale_fill_viridis_c(option = "magma") +  
+  theme_minimal() +                         
+  labs(
+    title = "Percentage Undervotes Republican Minus Democrat",
+    fill = "Difference in Undervotes"
+  )
+  
+   
+   summary(undervotes_df$DEM_President_Percentage)
+   #Mean 0.6889
+   summary(undervotes_df$REP_President_Percentage)
+   #Mean 2.360
+   summary(undervotes_df$Difference_Undervotes_pres)
+   #Mean 1.67
+```
+
+Undervotes are when those who voted elsewhere on the ballot skip over or avoid voting for a specific race. Since the presidential race gets the most press and often brings people to the polls it is surprising when someone who comes out to vote avoids voting for president. Our data is primary data. We find that Republicans were more likely across all counties to undervote for president than Democrats. The difference between their undervoting rates is even greater in more Democratic counties. This was particularly true for counties surrounding DC such as Prince George's County, Montgomery County, Carroll County, and Howard County. This greater undervoting by Republicans can show a displeasure with their choices for presidential candidates especially for those in more Democratic counties. Although we do not have data on their ideology I think there might be more moderate Republicans or Independents that vote in the Republican primary in these districts. This could indicate that as the Republican party moves more to the right nationally some Republican voters would rather avoid voting for the presidential options given because they don't align with their ideas. 
 
 Results of undervotes for each race and county
 Montgomery County
