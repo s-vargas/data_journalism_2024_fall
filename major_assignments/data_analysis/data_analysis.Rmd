@@ -274,8 +274,6 @@ AA1 <- New_AnneArundel |>
               Rep_split_PCT = Rep_split/Rep_count*100
               )
 
-table(AnneArundel$Precinct)
-
 counties <- counties()
 glimpse(counties)
 md_counties <- counties |>
@@ -288,8 +286,7 @@ AA_precincts |>
   theme_minimal()
 
 AA1_Precincts <- AA1 |> 
-  left_join(AA_precincts, by = "PRECINCT")
-
+  left_join(AA_precincts, by = ("PRECINCT"))
 ```
 
 
