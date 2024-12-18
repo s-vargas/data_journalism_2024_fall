@@ -40,55 +40,30 @@ working with this data.
 This data is pretty huge, but this is a collection of all of the data if we were to want to load all of them.
 
 ```{r}
-Alleghany <- read_excel("data/01_Allegany PP24 CVRs/01PP24_Prov_CVR_SBE.xlsx") |> 
-  mutate(County = "Alleghany")
-AnneArundel <- read_excel("data/02_Anne Arundel PP24 CVRs/02PP24_Prov_CVR_SBE.xlsx") |> 
-  mutate(County = "Anne Arundel")
-BaltimoreCity <- read_excel("data/03_Baltimore City PP24 CVRs/03PP24_Prov_CVR_SBE.xlsx") |>  
-  mutate(County = "Baltimore City")
-BaltimoreCounty <- read_excel("data/04_Baltimore County PP24 CVRs/04PP24_Prov_CVR_SBE.xlsx") |> 
-  mutate(County = "Baltimore County")
-Calvert <- read_excel("data/05_Calvert PP24 CVRs/05PP24_Prov_CVR_SBE.xlsx") |> 
-  mutate(County = "Calvert")
-Caroline <- read_excel("data/06_Caroline PP24 CVRs/06PP24_Prov_CVR_SBE.xlsx") |> 
-  mutate(County = "Caroline")
-Carroll <- read_excel("data/07_Carroll PP24 CVRs/07PP24_Prov_CVR_SBE.xlsx") |> 
-  mutate(County = "Carroll")
-Cecil <- read_excel("data/08_Cecil PP24 CVRs/08PP24_Prov_CVR_SBE.xlsx") |> 
-  mutate(County = "Cecil")
-Charles <- read_excel("data/09_Charles PP24 CVRs/09PP24_Prov_CVR_SBE.xlsx") |> 
-  mutate(County = "Charles")
-Dorchester <- read_excel("data/10_Dorchester PP24 CVRs/10PP24_Prov_CVR_SBE.xlsx") |> 
-  mutate(County = "Dorchester")
-Frederick <- read_excel("data/11_Frederick PP24 CVRs/11PP24_Prov_CVR_SBE.xlsx") |> 
-  mutate(County = "Frederick")
-Garrett <- read_excel("data/12_Garrett PP24 CVRs/12PP24_Prov_CVR_SBE.xlsx") |> 
-  mutate(County = "Garrett")
-Harford <- read_excel("data/13_Harford PP24 CVRs/13PP24_Prov_CVR_SBE.xlsx") |> 
-  mutate(County = "Harford")
-Howard <- read_excel("data/14_Howard PP24 CVRs/14PP24_Prov_CVR_SBE.xlsx") |> 
-  mutate(County = "Howard")
-Kent <- read_excel("data/15_Kent PP24 CVRs/15PP24_Prov_CVR_SBE.xlsx") |> 
-  mutate(County = "Kent")
-Montgomery <- read_excel("data/16_Montgomery PP24 CVRs/16PP24_Prov_CVR_SBE.xlsx") |> 
-  mutate(County = "Montgomery")
-PG <- read_excel("data/17_Prince George's PP24 CVRs/17PP24_Prov_CVR_SBE.xlsx") |>
-  mutate(County = "Prince George's")
-QueenAnnes <- read_excel("data/18_Queen Annes PP24 CVRs/18PP24_Prov_CVR_SBE.xlsx") |>
-  mutate(County = "Queen Anne's")
-StMarys <- read_excel("data/19_St Marys PP24 CVRs/19PP24_Prov_CVR_SBE.xlsx") |> 
-  mutate(County = "St Marys")
-Somerset <- read_excel("data/20_Somerset PP24 CVRs/20PP24_Prov_CVR_SBE.xlsx") |> 
-  mutate(County = "Somerset")
-Talbot <- read_excel("data/21_Talbot PP24 CVRs/21PP24_Prov_CVR_SBE.xlsx") |> 
-  mutate(County = "Talbot")
-Washington <- read_excel("data/22_Washington PP24 CVRs/22PP24_Prov_CVR_SBE.xlsx") |> 
-  mutate(County = "Washington")
-Wicomico <- read_excel("data/23_Wicomico PP24 CVRs/23PP24_Prov_CVR_SBE.xlsx") |> 
-  mutate(County = "Wicomico")
-Worcester <- read_excel("data/24_Worcester PP24 CVRs/24PP24_Prov_CVR_SBE.xlsx") |> 
-  mutate(County = "Worcester")
-  
+Alleghany <- read_excel("data/01_Allegany PP24 CVRs/01PP24_Prov_CVR_SBE.xlsx")
+AnneArundel <- read_excel("data/02_Anne Arundel PP24 CVRs/02PP24_Prov_CVR_SBE.xlsx")
+BaltimoreCity <- read_excel("data/03_Baltimore City PP24 CVRs/03PP24_Prov_CVR_SBE.xlsx")
+BaltimoreCounty <- read_excel("data/04_Baltimore County PP24 CVRs/04PP24_Prov_CVR_SBE.xlsx")
+Calvert <- read_excel("data/05_Calvert PP24 CVRs/05PP24_Prov_CVR_SBE.xlsx")
+Caroline <- read_excel("data/06_Caroline PP24 CVRs/06PP24_Prov_CVR_SBE.xlsx")
+Carroll <- read_excel("data/07_Carroll PP24 CVRs/07PP24_Prov_CVR_SBE.xlsx")
+Cecil <- read_excel("data/08_Cecil PP24 CVRs/08PP24_Prov_CVR_SBE.xlsx")
+Charles <- read_excel("data/09_Charles PP24 CVRs/09PP24_Prov_CVR_SBE.xlsx")
+Dorchester <- read_excel("data/10_Dorchester PP24 CVRs/10PP24_Prov_CVR_SBE.xlsx")
+Frederick <- read_excel("data/11_Frederick PP24 CVRs/11PP24_Prov_CVR_SBE.xlsx")
+Garrett <- read_excel("data/12_Garrett PP24 CVRs/12PP24_Prov_CVR_SBE.xlsx")
+Harford <- read_excel("data/13_Harford PP24 CVRs/13PP24_Prov_CVR_SBE.xlsx")
+Howard <- read_excel("data/14_Howard PP24 CVRs/14PP24_Prov_CVR_SBE.xlsx") 
+Kent <- read_excel("data/15_Kent PP24 CVRs/15PP24_Prov_CVR_SBE.xlsx")
+Montgomery <- read_excel("data/16_Montgomery PP24 CVRs/16PP24_Prov_CVR_SBE.xlsx")
+PG <- read_excel("data/17_Prince George's PP24 CVRs/17PP24_Prov_CVR_SBE.xlsx")
+QueenAnnes <- read_excel("data/18_Queen Annes PP24 CVRs/18PP24_Prov_CVR_SBE.xlsx")
+StMarys <- read_excel("data/19_St Marys PP24 CVRs/19PP24_Prov_CVR_SBE.xlsx")
+Somerset <- read_excel("data/20_Somerset PP24 CVRs/20PP24_Prov_CVR_SBE.xlsx")
+Talbot <- read_excel("data/21_Talbot PP24 CVRs/21PP24_Prov_CVR_SBE.xlsx")
+Washington <- read_excel("data/22_Washington PP24 CVRs/22PP24_Prov_CVR_SBE.xlsx")
+Wicomico <- read_excel("data/23_Wicomico PP24 CVRs/23PP24_Prov_CVR_SBE.xlsx")
+Worcester <- read_excel("data/24_Worcester PP24 CVRs/24PP24_Prov_CVR_SBE.xlsx") 
 ```
 
 ## Questions to explore
@@ -130,17 +105,20 @@ Frederick <- Frederick |>
     `Board of Education (50000167144)` == "Jaime Kiersten Brennan (10022022.0000119)" ~ "REP",
     TRUE ~ "Other"
   ),
-  not_split = ifelse(str_detect(`Ballot Style`, "Rep") & REP_BOE == "REP" | str_detect(`Ballot Style`, "Dem") & REP_BOE != "REP" , 1 , 0)) # if they are REP and voted for one of the 1776 ed candidates OR Dem and did NOT vote for one of the 1776 candidates, they did NOT split their PRIMARY ballot
-table(Frederick$not_split) 
+  split = ifelse(str_detect(`Ballot Style`, "Rep") & REP_BOE != "REP" | str_detect(`Ballot Style`, "Dem") & REP_BOE == "REP" , 1 , 0)) # if they are REP and didnt vote for one of the 1776 ed candidates OR Dem and did vote for one of the 1776 candidates, they DID split their PRIMARY ballot
+table(Frederick$split) 
 # 34949 not split
 # 15485 split from party candidates
 
-Frederick_Rep <- Frederick |> 
-  filter(str_detect(`Ballot Style`, "Rep"))
-table(Frederick_Rep$not_split)
-# 9127 Republicans split
-# 11330 republicans did not split (voted for 1776 candidates)
-11330/(11330+9127)*100 # 55% did not split
+Frederick |> 
+  filter(str_detect(`Ballot Style`, "Rep")) |> 
+  group_by(split, REP_BOE) |> 
+  summarise(Rep_count = n())
+
+Frederick |> 
+  filter(str_detect(`Ballot Style`, "Dem")) |> 
+  group_by(split, REP_BOE) |> 
+  summarise(Dem_count = n())
 
 #### Washington #### 
 table(Washington$`Board of Education (50000167344)`)
@@ -155,19 +133,21 @@ Washington <- Washington |>
     `Board of Education (50000167344)` == "Melissa Williams (10031031.0000656)" ~ "REP",
     TRUE ~ "Other"
   ),
-  not_split = ifelse(str_detect(`Ballot Style`, "Rep") & REP_BOE == "REP" | 
-                       str_detect(`Ballot Style`, "Dem") & REP_BOE != "REP" , 1 , 0)) # if they are REP and voted for one of the 1776 ed candidates OR Dem and did NOT vote for one of the 1776 candidates, they did NOT split their PRIMARY ballot
-table(Washington$not_split) 
+  split = ifelse(str_detect(`Ballot Style`, "Rep") & REP_BOE != "REP" | 
+                       str_detect(`Ballot Style`, "Dem") & REP_BOE == "REP" , 1 , 0)) # if they are REP and didnt vote for one of the 1776 ed candidates OR Dem and did vote for one of the 1776 candidates, they DID split their PRIMARY ballot
+table(Washington$split) 
 # 12965 not split
 # 11545 split from party candidates
 
-Washington_Rep <- Washington |> 
-  filter(str_detect(`Ballot Style`, "Rep"))
-table(Washington_Rep$not_split)
-# 6737 Republicans did not split (voted for 1776 candidates) 
-6737/(6737+7302)*100 # 48% Rep did not split
-# 7302 Republicans did split
+Washington |> 
+  filter(str_detect(`Ballot Style`, "Rep")) |> 
+  group_by(split, REP_BOE) |> 
+  summarise(Rep_count = n())
 
+Washington |> 
+  filter(str_detect(`Ballot Style`, "Dem")) |> 
+  group_by(split, REP_BOE) |> 
+  summarise(Dem_count = n())
 
 # conservative candidates: Joseph Marchio, Paul Harrison, Melissa Goshorn
 #### Talbot #### 
@@ -179,15 +159,25 @@ Talbot <- Talbot |>
     `Board of Education (2) (50000173444)` == "Ann C. O'Connor (10122127.0000735)" ~ "REP",
     TRUE ~ "Other"
   ),
-  not_split = ifelse(str_detect(`Ballot Style`, "Rep") & REP_BOE == "REP" | 
-                       str_detect(`Ballot Style`, "Dem") & REP_BOE != "REP" , 1 , 0)) # if they are REP and voted for one of the 1776 ed candidates OR Dem and did NOT vote for one of the 1776 candidates, they did NOT split their PRIMARY ballot
-table(Talbot$not_split) 
+  split = ifelse(str_detect(`Ballot Style`, "Rep") & REP_BOE != "REP" | 
+                       str_detect(`Ballot Style`, "Dem") & REP_BOE == "REP" , 1 , 0)) # if they are REP and didnt vote for one of the 1776 ed candidates OR Dem and did vote for one of the 1776 candidates, they DID split their PRIMARY ballot
+table(Talbot$split) 
 # 4077 not split
 # 3855 split from party candidates
 
-Talbot_Rep <- Talbot |> 
-  filter(str_detect(`Ballot Style`, "Rep"))
-table(Talbot_Rep$not_split)
+Talbot_BOE <- Talbot[!is.na(Talbot$`Board of Education (2) (50000173444)`), ] # only include those who had ballots with BOE on it
+table(Talbot_BOE$split) 
+
+Talbot_BOE |> 
+  filter(str_detect(`Ballot Style`, "Rep")) |> 
+  group_by(split, REP_BOE) |> 
+  summarise(Rep_count = n())
+
+Talbot_BOE |> 
+  filter(str_detect(`Ballot Style`, "Dem")) |> 
+  group_by(split, REP_BOE) |> 
+  summarise(Dem_count = n())
+
 # 239 Republicans did not split (voted for 1776 candidates) 
 239/(239+3701)*100 # 6% Rep did not split
 # 3701 Republicans did split
@@ -202,91 +192,39 @@ table(AnneArundel$`Board of Education (4) (50000176744)`)
 table(AnneArundel$`Board of Education (5) (50000176844)`) # Latoya
 
 AnneArundel <- AnneArundel |> 
+  mutate(BOE = coalesce(`Board of Education (1) (50000176644)`, `Board of Education (3) (50000173844)`, `Board of Education (4) (50000176744)`, `Board of Education (5) (50000176844)`)) |> 
   mutate(REP_BOE = case_when(
-    `Board of Education (3) (50000173844)` == "Chuck Yocum (10024024.0000151)" ~ "REP",
-    `Board of Education (5) (50000176844)` == "LaToya Nkongolo (10008008.0000078)" ~ "REP",
+    BOE == "Chuck Yocum (10024024.0000151)" ~ "REP",
+    BOE == "LaToya Nkongolo (10008008.0000078)" ~ "REP",
     TRUE ~ "Other"
   ),
-  not_split = ifelse(str_detect(`Ballot Style`, "Rep") & REP_BOE == "REP" | 
-                       str_detect(`Ballot Style`, "Dem") & REP_BOE != "REP" , 1 , 0)) # if they are REP and voted for one of the 1776 ed candidates OR Dem and did NOT vote for one of the 1776 candidates, they did NOT split their PRIMARY ballot
-table(AnneArundel$not_split) 
-# 55953 not split
-# 37613 split from party candidates
+  split = ifelse(str_detect(`Ballot Style`, "Rep") & REP_BOE != "REP" | 
+                       str_detect(`Ballot Style`, "Dem") & REP_BOE == "REP" , 1 , 0)) # if they are REP and didnt vote for one of the 1776 ed candidates OR Dem and did vote for one of the 1776 candidates, they DID split their PRIMARY ballot
 
-AnneArundel_Rep <- AnneArundel |> 
-  filter(str_detect(`Ballot Style`, "Rep"))
-table(AnneArundel_Rep$not_split)
-# 3903 Republicans did not split (voted for 1776 candidates) 
-3903/(3903+31555)*100 # 11% Rep did not split
-# 31555 Republicans did split
-```
-```{r, BOE Maps by Precinct}
-# Load libraries
-library(sf)
-library(janitor)
-library(tidycensus)
-library(ggplot2)
-library(cowplot)
-library(tigris)
+AnneArundel_BOE <- AnneArundel[!is.na(AnneArundel$BOE), ] # only include those who had ballots with BOE on it
+table(AnneArundel_BOE$split) 
 
-# Counties I am working with: Anne Arundel, Frederick, Talbot, Washington
-# Counties that appear to also have had right wing PAC supported candidates: Cecil
+AnneArundel_BOE |> 
+  filter(str_detect(`Ballot Style`, "Rep")) |> 
+  group_by(split, REP_BOE) |> 
+  summarise(Rep_count = n())
 
-# Trying to code a sub data set organized by precinct within each county
-# Rep_Rep = republicans that voted for the rep supported candidates
-# Rep_Split = republicans that did not vote for the right wing candidates
-# Dem_Dem = dems that did not vote for the right wing candidates
-# Dem_Split = dems that did vote for the right wing candidates
+AnneArundel_BOE |> 
+  filter(str_detect(`Ballot Style`, "Dem")) |> 
+  group_by(split, REP_BOE) |> 
+  summarise(Dem_count = n())
 
-AnneArundel <- AnneArundel |> 
-  # lets simplify the party ballot var structure
-  mutate(Ballot_party = case_when(
-      (str_detect(`Ballot Style`, "Rep")) ~ "Rep",
-      (str_detect(`Ballot Style`, "Dem")) ~ "Dem",
-      TRUE ~ "Other"))
+###### lets make a DF of what we have observed through this analysis #######
 
-AnneArundel <- AnneArundel |> 
-  # lets make the breakdown of split or not split by party
-  mutate(split = case_when(
-      Ballot_party == "Rep" & REP_BOE == "REP"  ~ "Rep_Rep",
-      Ballot_party == "Dem" & REP_BOE != "REP" ~ "Dem_Dem",
-      Ballot_party == "Rep" & REP_BOE != "REP"  ~ "Rep_Split",
-      Ballot_party == "Dem" & REP_BOE == "REP" ~ "Dem_Split",
-      TRUE ~ "Other"
-      ))
-
-New_AnneArundel <- AnneArundel |>
-  filter(split != "Other") |> # this is so we are only looking at partisan ballots and percentages
-  filter(str_detect(Precinct, "003-") | str_detect(Precinct, "005-")) |>  # these are the only two districts that had BOE elections
-  mutate(PRECINCT = str_sub(Precinct, 1, 3))
-
-# Now a table of splits, party counts, by precinct
-AA1 <- New_AnneArundel |>  
- group_by(Precinct) |> 
-    summarise(Dem_count = sum(Ballot_party == "Dem"),
-              Rep_count = sum(Ballot_party == "Rep"),
-              Rep_split = sum(split == "Rep_Split"),
-              Dem_split = sum(split == "Dem_Split"),
-              total_split = Rep_split + Dem_split,
-              n = n(),
-              total_split_PCT = total_split/n*100,
-              Dem_split_PCT = Dem_split/Dem_count*100,
-              Rep_split_PCT = Rep_split/Rep_count*100
-              )
-
-counties <- counties()
-glimpse(counties)
-md_counties <- counties |>
-  filter(STATEFP == "24")
-
-AA_precincts <- read_sf("data/Voter_Precincts.shp")
-AA_precincts |>
-  ggplot() +
-  geom_sf() +
-  theme_minimal()
-
-AA1_Precincts <- AA1 |> 
-  left_join(AA_precincts, by = ("PRECINCT"))
+County <- c("Anne Arundel","Frederick","Talbot","Washington")
+Rep_Count <- c(19853, 20457, 573, 14039)
+Rep_Split <- c(15950, 9127, 334, 7302)
+Rep_Split_Perc <- round((Rep_Split/ (Rep_Split+Rep_Count) * 100), 2)
+Dem_Count <- c(29631, 25772, 601, 8980)
+Dem_Split <- c(2707, 2153, 82, 2752)
+Dem_Split_Perc <- round((Dem_Split/ (Dem_Split+Dem_Count) * 100), 2)
+Splitting <- data.frame(County, Rep_Count, Rep_Split, Rep_Split_Perc, Dem_Count, Dem_Split, Dem_Split_Perc)
+print(Splitting)
 ```
 
 
