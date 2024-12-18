@@ -3,7 +3,8 @@ title: "Data Analysis Project"
 author: "Isabelle Jensen, Sonia Vargas"
 date: "11/16/24"
 output:
-  pdf_document
+  pdf_document:
+    latex_engine: xelatex
 ---
 
 
