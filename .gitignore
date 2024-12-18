@@ -43,3 +43,4 @@ vignettes/*.pdf
 *.DS_Store
 /major_assignments/data_analysis/2024 Presidential Primary CVRs
 /major_assignments/data_analysis/data
+major_assignments/data_analysis/data_analysis_writeup.Rmd
